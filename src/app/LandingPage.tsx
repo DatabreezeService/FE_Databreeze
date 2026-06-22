@@ -40,8 +40,7 @@ export function LandingPage() {
     <div className="landing-page">
       <header className="landing-nav" aria-label="DataBreeze landing navigation">
         <Link className="landing-brand" to="/" aria-label="DataBreeze landing">
-          <img src="/brand/databreeze-mark-dark.png" alt="" />
-          <span>DataBreeze</span>
+          <img src="/brand/databreeze-wordmark-blue.png" alt="DataBreeze" />
         </Link>
         <nav>
           <a href="#workflow">Quy trình</a>

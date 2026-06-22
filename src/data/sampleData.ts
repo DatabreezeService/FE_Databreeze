@@ -1,58 +1,82 @@
+export type Tone = 'neutral' | 'good' | 'warn' | 'danger' | 'info'
+
 export type UploadStatus = 'mapping' | 'validating' | 'running' | 'completed' | 'warning' | 'failed'
 
-export type NavItemId =
-  | 'dashboard'
-  | 'uploads'
-  | 'stores'
-  | 'costs'
-  | 'expenses'
-  | 'insights'
-  | 'usage'
-
-export const kpis = [
-  { label: 'Doanh thu', value: '186.4M', delta: '+12.8%', tone: 'good' },
-  { label: 'Loi nhuan gop', value: '54.2M', delta: '+8.1%', tone: 'good' },
-  { label: 'Loi nhuan rong', value: '37.8M', delta: '+4.4%', tone: 'good' },
-  { label: 'Bien loi nhuan', value: '20.3%', delta: '-1.6%', tone: 'warn' },
-  { label: 'Don hang', value: '2,418', delta: '+194', tone: 'neutral' },
-] as const
-
-export const profitSeries = [18, 24, 21, 32, 28, 37, 42, 39, 48, 44, 52, 58]
-
-export const topSkus = [
-  { sku: 'DB-TEE-001', name: 'Ao thun basic', revenue: '31.2M', profit: '9.8M', margin: '31.4%', status: 'Healthy' },
-  { sku: 'SKN-BOX-09', name: 'Combo cham soc da', revenue: '26.7M', profit: '7.4M', margin: '27.7%', status: 'Missing cost' },
-  { sku: 'BAG-MINI-18', name: 'Tui deo cheo mini', revenue: '19.1M', profit: '3.2M', margin: '16.8%', status: 'Low margin' },
-  { sku: 'KIT-HOME-22', name: 'Bo dung cu nha bep', revenue: '15.6M', profit: '5.1M', margin: '32.7%', status: 'Healthy' },
-]
-
-export const uploads: Array<{
+export type UploadRecord = {
   file: string
   store: string
   source: string
   status: UploadStatus
   rows: string
   time: string
-}> = [
+}
+
+export type MappingRow = {
+  source: string
+  example: string
+  target: string
+  group: string
+  confidence: 'Cao' | 'Trung bình' | 'Thiếu'
+  required: boolean
+}
+
+export type CostItem = {
+  sku: string
+  product: string
+  orders: number
+  affected: string
+  unitCost: string
+}
+
+export type ExpenseItem = {
+  category: string
+  description: string
+  store: string
+  amount: string
+  date: string
+}
+
+export const storeOptions = ['Tất cả shop', 'Maison Sài Gòn', 'Breeze Beauty', 'Home Kit VN']
+export const dateRangeOptions = ['7 ngày qua', '30 ngày qua', 'Tháng này', 'Quý này']
+export const sourceOptions = ['Tất cả nguồn', 'Shopee', 'TikTok Shop', 'Google Ads', 'Chi phí']
+
+export const kpis: Array<{ label: string; value: string; delta: string; tone: Tone }> = [
+  { label: 'Doanh thu', value: '186,4M', delta: '+12,8%', tone: 'good' },
+  { label: 'Lợi nhuận gộp', value: '54,2M', delta: '+8,1%', tone: 'good' },
+  { label: 'Lợi nhuận ròng', value: '37,8M', delta: '+4,4%', tone: 'good' },
+  { label: 'Biên lợi nhuận', value: '20,3%', delta: '-1,6%', tone: 'warn' },
+  { label: 'Đơn hàng', value: '2.418', delta: '+194', tone: 'neutral' },
+]
+
+export const profitSeries = [18, 24, 21, 32, 28, 37, 42, 39, 48, 44, 52, 58]
+
+export const topSkus = [
+  { sku: 'DB-TEE-001', name: 'Áo thun basic', revenue: '31,2M', profit: '9,8M', margin: '31,4%', status: 'Khỏe' },
+  { sku: 'SKN-BOX-09', name: 'Combo chăm sóc da', revenue: '26,7M', profit: '7,4M', margin: '27,7%', status: 'Thiếu giá vốn' },
+  { sku: 'BAG-MINI-18', name: 'Túi đeo chéo mini', revenue: '19,1M', profit: '3,2M', margin: '16,8%', status: 'Biên thấp' },
+  { sku: 'KIT-HOME-22', name: 'Bộ dụng cụ nhà bếp', revenue: '15,6M', profit: '5,1M', margin: '32,7%', status: 'Khỏe' },
+]
+
+export const initialUploads: UploadRecord[] = [
   {
     file: 'shopee_orders_may.xlsx',
-    store: 'Maison Sai Gon',
+    store: 'Maison Sài Gòn',
     source: 'Shopee',
     status: 'mapping',
-    rows: '4,218',
-    time: '12 phut truoc',
+    rows: '4.218',
+    time: '12 phút trước',
   },
   {
     file: 'tiktok_shop_week_21.csv',
     store: 'Breeze Beauty',
     source: 'TikTok Shop',
     status: 'warning',
-    rows: '1,840',
-    time: 'Hom qua',
+    rows: '1.840',
+    time: 'Hôm qua',
   },
   {
     file: 'ads_google_q2.csv',
-    store: 'All stores',
+    store: 'Tất cả shop',
     source: 'Google Ads',
     status: 'completed',
     rows: '940',
@@ -60,100 +84,112 @@ export const uploads: Array<{
   },
   {
     file: 'expense_may.xlsx',
-    store: 'Maison Sai Gon',
-    source: 'Expenses',
+    store: 'Maison Sài Gòn',
+    source: 'Chi phí',
     status: 'completed',
     rows: '64',
     time: '28 thg 5',
   },
 ]
 
-export const mappingRows = [
+export const mappingTargets = [
+  'Không map',
+  'Mã đơn hàng',
+  'SKU',
+  'Doanh thu gộp',
+  'Phí sàn',
+  'Ngày tạo đơn',
+  'Giá vốn',
+  'Tên sản phẩm',
+  'Số lượng',
+]
+
+export const initialMappingRows: MappingRow[] = [
   {
-    source: 'Ma don hang',
+    source: 'Mã đơn hàng',
     example: '250522QF14MA9',
-    target: 'Order ID',
-    group: 'Order basics',
-    confidence: 'High',
+    target: 'Mã đơn hàng',
+    group: 'Thông tin đơn',
+    confidence: 'Cao',
     required: true,
   },
   {
-    source: 'SKU phan loai hang',
+    source: 'SKU phân loại hàng',
     example: 'DB-TEE-001-BLACK-M',
     target: 'SKU',
-    group: 'Product and SKU',
-    confidence: 'High',
+    group: 'Sản phẩm và SKU',
+    confidence: 'Cao',
     required: true,
   },
   {
-    source: 'Tong tien hang',
+    source: 'Tổng tiền hàng',
     example: '349000',
-    target: 'Gross revenue',
-    group: 'Revenue and fees',
-    confidence: 'Medium',
+    target: 'Doanh thu gộp',
+    group: 'Doanh thu và phí',
+    confidence: 'Trung bình',
     required: true,
   },
   {
-    source: 'Phi dich vu',
+    source: 'Phí dịch vụ',
     example: '18400',
-    target: 'Marketplace fee',
-    group: 'Revenue and fees',
-    confidence: 'Medium',
+    target: 'Phí sàn',
+    group: 'Doanh thu và phí',
+    confidence: 'Trung bình',
     required: false,
   },
   {
-    source: 'Ngay tao don',
+    source: 'Ngày tạo đơn',
     example: '2026-05-29 14:32',
-    target: 'Order date',
-    group: 'Order basics',
-    confidence: 'High',
+    target: 'Ngày tạo đơn',
+    group: 'Thông tin đơn',
+    confidence: 'Cao',
     required: true,
   },
   {
-    source: 'Gia von',
+    source: 'Giá vốn',
     example: '',
-    target: 'Not mapped',
-    group: 'Costs',
-    confidence: 'Missing',
+    target: 'Không map',
+    group: 'Giá vốn',
+    confidence: 'Thiếu',
     required: false,
   },
 ]
 
 export const stores = [
-  { name: 'Maison Sai Gon', platform: 'Shopee', status: 'Active', lastImport: '12 phut truoc', revenue: '94.1M' },
-  { name: 'Breeze Beauty', platform: 'TikTok Shop', status: 'Needs costs', lastImport: 'Hom qua', revenue: '61.8M' },
-  { name: 'Home Kit VN', platform: 'Shopee', status: 'Active', lastImport: '29 thg 5', revenue: '30.5M' },
+  { name: 'Maison Sài Gòn', platform: 'Shopee', status: 'Đang hoạt động', lastImport: '12 phút trước', revenue: '94,1M' },
+  { name: 'Breeze Beauty', platform: 'TikTok Shop', status: 'Cần giá vốn', lastImport: 'Hôm qua', revenue: '61,8M' },
+  { name: 'Home Kit VN', platform: 'Shopee', status: 'Đang hoạt động', lastImport: '29 thg 5', revenue: '30,5M' },
 ]
 
-export const missingCosts = [
-  { sku: 'SKN-BOX-09', product: 'Combo cham soc da', orders: 214, affected: '26.7M' },
-  { sku: 'BAG-MINI-18', product: 'Tui deo cheo mini', orders: 91, affected: '19.1M' },
-  { sku: 'ACC-CABLE-04', product: 'Cap sac nhanh', orders: 64, affected: '8.4M' },
+export const initialMissingCosts: CostItem[] = [
+  { sku: 'SKN-BOX-09', product: 'Combo chăm sóc da', orders: 214, affected: '26,7M', unitCost: '' },
+  { sku: 'BAG-MINI-18', product: 'Túi đeo chéo mini', orders: 91, affected: '19,1M', unitCost: '' },
+  { sku: 'ACC-CABLE-04', product: 'Cáp sạc nhanh', orders: 64, affected: '8,4M', unitCost: '' },
 ]
 
-export const expenses = [
-  { category: 'Ads', description: 'Google Ads May', store: 'All stores', amount: '8.2M', date: '31 thg 5' },
-  { category: 'Fulfillment', description: 'Kho va dong goi', store: 'Maison Sai Gon', amount: '4.6M', date: '29 thg 5' },
-  { category: 'Operations', description: 'Cong cu van hanh', store: 'All stores', amount: '1.2M', date: '25 thg 5' },
+export const initialExpenses: ExpenseItem[] = [
+  { category: 'Quảng cáo', description: 'Google Ads tháng 5', store: 'Tất cả shop', amount: '8,2M', date: '31 thg 5' },
+  { category: 'Vận hành', description: 'Kho và đóng gói', store: 'Maison Sài Gòn', amount: '4,6M', date: '29 thg 5' },
+  { category: 'Công cụ', description: 'Công cụ vận hành', store: 'Tất cả shop', amount: '1,2M', date: '25 thg 5' },
 ]
 
 export const insights = [
   {
-    severity: 'High',
-    title: 'SKU co doanh thu nhung dang lo',
-    summary: 'BAG-MINI-18 co bien loi nhuan 16.8% sau phi san va khuyen mai.',
-    action: 'Kiem tra gia von',
+    severity: 'Cao',
+    title: 'SKU có doanh thu nhưng đang lỗ',
+    summary: 'BAG-MINI-18 có biên lợi nhuận 16,8% sau phí sàn và khuyến mãi.',
+    action: 'Kiểm tra giá vốn',
   },
   {
-    severity: 'Medium',
-    title: 'Mot so dong ban hang thieu gia von',
-    summary: '369 don hang bi anh huong boi SKU chua co gia von.',
-    action: 'Them gia von',
+    severity: 'Vừa',
+    title: 'Một số dòng bán hàng thiếu giá vốn',
+    summary: '369 đơn hàng bị ảnh hưởng bởi SKU chưa có giá vốn.',
+    action: 'Thêm giá vốn',
   },
   {
-    severity: 'Low',
-    title: 'Doanh thu Shopee tang trong 7 ngay',
-    summary: 'Maison Sai Gon tang 12.8% so voi ky truoc.',
-    action: 'Xem chi tiet',
+    severity: 'Thấp',
+    title: 'Doanh thu Shopee tăng trong 7 ngày',
+    summary: 'Maison Sài Gòn tăng 12,8% so với kỳ trước.',
+    action: 'Xem chi tiết',
   },
 ]

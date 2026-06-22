@@ -44,10 +44,10 @@ Primary cobalt is used for the main action and selected app state. Teal is a sec
 Use one product sans family:
 
 ```css
-font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+font-family: "Be Vietnam Pro", "Noto Sans", "Segoe UI", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 ```
 
-Inter is acceptable here because this is operational product UI where familiarity helps trust. Avoid display fonts, serif emphasis, decorative letter spacing, and viewport-scaled type.
+Be Vietnam Pro is the preferred product font because the primary UI language is Vietnamese and diacritics must feel native, not bolted on. Avoid display fonts, serif emphasis, decorative letter spacing, and viewport-scaled type.
 
 Type scale:
 
@@ -141,12 +141,12 @@ Visible product copy should be short, operational, and Vietnamese-first where th
 
 Use:
 
-- "Tai file moi"
-- "Tiep tuc map cot"
-- "Kiem tra du lieu"
-- "Cap nhat dashboard"
-- "Them shop"
-- "Gia von bi thieu"
+- "Tải file mới"
+- "Tiếp tục map cột"
+- "Kiểm tra dữ liệu"
+- "Cập nhật dashboard"
+- "Thêm shop"
+- "Giá vốn bị thiếu"
 
 Avoid:
 

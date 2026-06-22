@@ -1,11 +1,14 @@
-import type { ReactNode } from 'react'
+import type { ChangeEvent, FormEvent, ReactNode } from 'react'
 import {
   Bell,
+  CaretRight,
+  CheckCircle,
   CreditCard,
   DownloadSimple,
   House,
   Lightbulb,
   List,
+  MagnifyingGlass,
   Receipt,
   ShoppingBag,
   Storefront,
@@ -14,50 +17,161 @@ import {
   WarningCircle,
   X,
 } from '@phosphor-icons/react'
-import { useState } from 'react'
-import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
+import { useMemo, useRef, useState } from 'react'
+import { NavLink, Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import {
-  expenses,
+  dateRangeOptions,
+  initialExpenses,
+  initialMappingRows,
+  initialMissingCosts,
+  initialUploads,
   insights,
   kpis,
-  mappingRows,
-  missingCosts,
+  mappingTargets,
   profitSeries,
+  sourceOptions,
+  storeOptions,
   stores,
   topSkus,
-  uploads,
+  type CostItem,
+  type ExpenseItem,
+  type MappingRow,
+  type Tone,
+  type UploadRecord,
+  type UploadStatus,
 } from '../data/sampleData'
-import { Button, EmptyState, Field, MetricCard, Panel, StatusBadge, StepIndicator } from '../components/ui'
+import { Button, EmptyState, MetricCard, Panel, SelectField, StatusBadge, StepIndicator } from '../components/ui'
 
 const navItems = [
-  { path: '/dashboard', label: 'Dashboard', icon: House },
-  { path: '/uploads', label: 'Uploads', icon: UploadSimple },
-  { path: '/stores', label: 'Stores', icon: Storefront },
-  { path: '/costs', label: 'Product Costs', icon: Tag },
-  { path: '/expenses', label: 'Expenses', icon: Receipt },
-  { path: '/insights', label: 'Insights', icon: Lightbulb },
-  { path: '/usage', label: 'Plan & Usage', icon: CreditCard },
+  { path: '/dashboard', label: 'Tổng quan', icon: House },
+  { path: '/uploads', label: 'Tệp tải lên', icon: UploadSimple },
+  { path: '/stores', label: 'Shop', icon: Storefront },
+  { path: '/costs', label: 'Giá vốn', icon: Tag },
+  { path: '/expenses', label: 'Chi phí', icon: Receipt },
+  { path: '/insights', label: 'Gợi ý', icon: Lightbulb },
+  { path: '/usage', label: 'Gói & sử dụng', icon: CreditCard },
 ]
 
 export function App() {
+  const navigate = useNavigate()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const [selectedStore, setSelectedStore] = useState(storeOptions[0])
+  const [dateRange, setDateRange] = useState(dateRangeOptions[1])
+  const [source, setSource] = useState(sourceOptions[0])
+  const [query, setQuery] = useState('')
+  const [notice, setNotice] = useState('Dữ liệu mẫu đã sẵn sàng để thao tác.')
+  const [uploads, setUploads] = useState<UploadRecord[]>(initialUploads)
+  const [mappingRows, setMappingRows] = useState<MappingRow[]>(initialMappingRows)
+  const [costItems, setCostItems] = useState<CostItem[]>(initialMissingCosts)
+  const [expenses, setExpenses] = useState<ExpenseItem[]>(initialExpenses)
+  const [validationComplete, setValidationComplete] = useState(false)
+
+  const updateLatestUploadStatus = (status: UploadStatus) => {
+    setUploads((current) => current.map((upload, index) => (index === 0 ? { ...upload, status, time: 'Vừa xong' } : upload)))
+  }
 
   return (
     <div className="app-shell">
       <Sidebar mobileOpen={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
       <div className="app-main">
-        <Topbar onMenu={() => setMobileNavOpen(true)} />
+        <Topbar
+          query={query}
+          onQueryChange={setQuery}
+          onMenu={() => setMobileNavOpen(true)}
+          onUpload={() => navigate('/uploads')}
+        />
         <main className="page-frame">
           <Routes>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/uploads" element={<UploadsPage />} />
-            <Route path="/uploads/mapping" element={<MappingPage />} />
-            <Route path="/uploads/validation" element={<ValidationPage />} />
+            <Route
+              path="/dashboard"
+              element={
+                <DashboardPage
+                  dateRange={dateRange}
+                  notice={notice}
+                  query={query}
+                  selectedStore={selectedStore}
+                  source={source}
+                  onDateRangeChange={setDateRange}
+                  onSourceChange={setSource}
+                  onStoreChange={setSelectedStore}
+                  onResolveCosts={() => navigate('/costs')}
+                />
+              }
+            />
+            <Route
+              path="/uploads"
+              element={
+                <UploadsPage
+                  query={query}
+                  selectedStore={selectedStore}
+                  source={source}
+                  uploads={uploads}
+                  onAddUpload={(upload) => setUploads((current) => [upload, ...current])}
+                  onNotice={setNotice}
+                />
+              }
+            />
+            <Route
+              path="/uploads/mapping"
+              element={
+                <MappingPage
+                  rows={mappingRows}
+                  onRowsChange={setMappingRows}
+                  onContinue={() => {
+                    updateLatestUploadStatus('validating')
+                    setNotice('Đã lưu mapping. DataBreeze đang kiểm tra dữ liệu trước khi import.')
+                    navigate('/uploads/validation')
+                  }}
+                  onReset={() => setMappingRows(initialMappingRows)}
+                />
+              }
+            />
+            <Route
+              path="/uploads/validation"
+              element={
+                <ValidationPage
+                  complete={validationComplete}
+                  onDownloadErrors={() => setNotice('Đã tạo file lỗi mẫu cho các dòng cần sửa.')}
+                  onImport={() => {
+                    setValidationComplete(true)
+                    updateLatestUploadStatus('completed')
+                    setNotice('Dashboard đã được cập nhật từ file Shopee mới nhất.')
+                  }}
+                />
+              }
+            />
             <Route path="/stores" element={<StoresPage />} />
-            <Route path="/costs" element={<CostsPage />} />
-            <Route path="/expenses" element={<ExpensesPage />} />
-            <Route path="/insights" element={<InsightsPage />} />
+            <Route
+              path="/costs"
+              element={
+                <CostsPage
+                  items={costItems}
+                  onCostChange={(sku, value) =>
+                    setCostItems((current) => current.map((item) => (item.sku === sku ? { ...item, unitCost: value } : item)))
+                  }
+                  onSave={(sku) => {
+                    const item = costItems.find((cost) => cost.sku === sku)
+                    if (!item?.unitCost.trim()) return
+                    setCostItems((current) => current.filter((cost) => cost.sku !== sku))
+                    setNotice(`Đã lưu giá vốn cho ${sku}.`)
+                  }}
+                />
+              }
+            />
+            <Route
+              path="/expenses"
+              element={
+                <ExpensesPage
+                  expenses={expenses}
+                  onAddExpense={(expense) => {
+                    setExpenses((current) => [expense, ...current])
+                    setNotice('Đã thêm chi phí mới vào workspace.')
+                  }}
+                />
+              }
+            />
+            <Route path="/insights" element={<InsightsPage onResolveCosts={() => navigate('/costs')} />} />
             <Route path="/usage" element={<UsagePage />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
@@ -75,14 +189,14 @@ function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose: () => 
           <img src="/brand/databreeze-mark-dark.png" alt="DataBreeze" />
           <div>
             <strong>DataBreeze</strong>
-            <span>Profit workspace</span>
+            <span>Không gian lợi nhuận</span>
           </div>
-          <button className="icon-button sidebar-close" type="button" onClick={onClose} aria-label="Close navigation">
+          <button className="icon-button sidebar-close" type="button" onClick={onClose} aria-label="Đóng điều hướng">
             <X size={18} weight="bold" />
           </button>
         </div>
 
-        <nav className="sidebar-nav" aria-label="Main navigation">
+        <nav className="sidebar-nav" aria-label="Điều hướng chính">
           {navItems.map((item) => {
             const Icon = item.icon
             return (
@@ -95,35 +209,49 @@ function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose: () => 
         </nav>
 
         <div className="sidebar-footer">
-          <span>Current plan</span>
+          <span>Gói hiện tại</span>
           <strong>Growth</strong>
           <div className="usage-bar">
             <span style={{ width: '62%' }} />
           </div>
-          <small>62% row quota used</small>
+          <small>Đã dùng 62% hạn mức dòng</small>
         </div>
       </aside>
-      {mobileOpen ? <button className="mobile-scrim" type="button" aria-label="Close navigation" onClick={onClose} /> : null}
+      {mobileOpen ? <button className="mobile-scrim" type="button" aria-label="Đóng điều hướng" onClick={onClose} /> : null}
     </>
   )
 }
 
-function Topbar({ onMenu }: { onMenu: () => void }) {
+function Topbar({
+  query,
+  onQueryChange,
+  onMenu,
+  onUpload,
+}: {
+  query: string
+  onQueryChange: (value: string) => void
+  onMenu: () => void
+  onUpload: () => void
+}) {
   return (
     <header className="topbar">
-      <button className="icon-button topbar-menu" type="button" onClick={onMenu} aria-label="Open navigation">
+      <button className="icon-button topbar-menu" type="button" onClick={onMenu} aria-label="Mở điều hướng">
         <List size={20} weight="bold" />
       </button>
       <div className="workspace-switcher">
         <span>Workspace</span>
         <strong>Maison Commerce</strong>
       </div>
+      <label className="command-box">
+        <MagnifyingGlass size={17} weight="duotone" />
+        <input value={query} onChange={(event) => onQueryChange(event.target.value)} placeholder="Tìm SKU, shop hoặc file" />
+      </label>
       <div className="topbar-actions">
-        <button className="icon-button" type="button" aria-label="Notifications">
+        <button className="icon-button" type="button" aria-label="Thông báo">
           <Bell size={18} weight="duotone" />
         </button>
-        <Button variant="primary">Tai file moi</Button>
-        <div className="user-chip" aria-label="Current user">
+        <Button onClick={onUpload}>Tải file mới</Button>
+        <div className="user-chip" aria-label="Người dùng hiện tại">
           MQ
         </div>
       </div>
@@ -151,57 +279,88 @@ function PageHeader({
   )
 }
 
-function Filters() {
-  return (
-    <div className="filter-row" aria-label="Dashboard filters">
-      <Field label="Store" value="All stores" />
-      <Field label="Date range" value="Last 30 days" />
-      <Field label="Source" value="All sources" />
-    </div>
-  )
-}
+function DashboardPage({
+  selectedStore,
+  dateRange,
+  source,
+  query,
+  notice,
+  onStoreChange,
+  onDateRangeChange,
+  onSourceChange,
+  onResolveCosts,
+}: {
+  selectedStore: string
+  dateRange: string
+  source: string
+  query: string
+  notice: string
+  onStoreChange: (value: string) => void
+  onDateRangeChange: (value: string) => void
+  onSourceChange: (value: string) => void
+  onResolveCosts: () => void
+}) {
+  const visibleSkus = useMemo(() => {
+    const normalized = query.trim().toLowerCase()
+    if (!normalized) return topSkus
+    return topSkus.filter((sku) => `${sku.sku} ${sku.name} ${sku.status}`.toLowerCase().includes(normalized))
+  }, [query])
 
-function DashboardPage() {
   return (
     <div className="page-stack">
       <PageHeader
-        title="Bang dieu khien loi nhuan"
-        body="Theo doi doanh thu, chi phi, loi nhuan va chat luong du lieu theo tung shop."
-        action={<Button>Tai file moi</Button>}
+        title="Tổng quan lợi nhuận"
+        body="Theo dõi doanh thu, chi phí, lợi nhuận và chất lượng dữ liệu theo từng shop."
+        action={<Button onClick={onResolveCosts}>Xử lý giá vốn</Button>}
       />
-      <Filters />
+      <div className="notice-strip">
+        <CheckCircle size={18} weight="duotone" />
+        <span>{notice}</span>
+      </div>
+      <div className="filter-row" aria-label="Bộ lọc dashboard">
+        <SelectField label="Shop" value={selectedStore} options={storeOptions} onChange={onStoreChange} />
+        <SelectField label="Khoảng thời gian" value={dateRange} options={dateRangeOptions} onChange={onDateRangeChange} />
+        <SelectField label="Nguồn dữ liệu" value={source} options={sourceOptions} onChange={onSourceChange} />
+      </div>
       <div className="metrics-grid">
         {kpis.map((kpi) => (
           <MetricCard key={kpi.label} {...kpi} />
         ))}
       </div>
       <div className="dashboard-grid">
-        <Panel title="Loi nhuan theo ngay" className="span-2">
+        <Panel title="Lợi nhuận theo ngày" description={`${selectedStore} · ${dateRange} · ${source}`} className="span-2">
           <ProfitChart />
         </Panel>
-        <Panel title="Can xu ly" action={<StatusBadge tone="warn">3 viec</StatusBadge>}>
-          <div className="action-list">
-            {insights.slice(0, 3).map((insight) => (
-              <div className="action-item" key={insight.title}>
-                <WarningCircle size={19} weight="duotone" />
-                <div>
-                  <strong>{insight.title}</strong>
-                  <span>{insight.summary}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+        <Panel title="Cần xử lý" action={<StatusBadge tone="warn">3 việc</StatusBadge>}>
+          <ActionList onResolveCosts={onResolveCosts} />
         </Panel>
-        <Panel title="SKU co loi nhuan cao" className="span-2">
-          <SkuTable />
+        <Panel title="SKU có lợi nhuận cao" className="span-2">
+          <SkuTable skus={visibleSkus} />
         </Panel>
-        <Panel title="Chat luong du lieu">
+        <Panel title="Chất lượng dữ liệu">
           <div className="quality-score">
             <strong>86%</strong>
-            <span>Du lieu du tot de xem dashboard. Hay them gia von cho 3 SKU de tinh loi nhuan chinh xac hon.</span>
+            <span>Dữ liệu đủ tốt để xem dashboard. Thêm giá vốn cho 3 SKU để lợi nhuận chính xác hơn.</span>
           </div>
         </Panel>
       </div>
+    </div>
+  )
+}
+
+function ActionList({ onResolveCosts }: { onResolveCosts: () => void }) {
+  return (
+    <div className="action-list">
+      {insights.slice(0, 3).map((insight, index) => (
+        <button className="action-item" key={insight.title} type="button" onClick={index === 1 ? onResolveCosts : undefined}>
+          <WarningCircle size={19} weight="duotone" />
+          <div>
+            <strong>{insight.title}</strong>
+            <span>{insight.summary}</span>
+          </div>
+          <CaretRight size={16} weight="bold" />
+        </button>
+      ))}
     </div>
   )
 }
@@ -218,7 +377,7 @@ function ProfitChart() {
 
   return (
     <div className="chart-wrap">
-      <svg viewBox="0 0 100 100" role="img" aria-label="Profit trend line chart">
+      <svg viewBox="0 0 100 100" role="img" aria-label="Biểu đồ xu hướng lợi nhuận">
         <polyline className="chart-grid" points="0,80 100,80" />
         <polyline className="chart-grid" points="0,55 100,55" />
         <polyline className="chart-grid" points="0,30 100,30" />
@@ -226,28 +385,32 @@ function ProfitChart() {
       </svg>
       <div className="chart-caption">
         <span>7 thg 5</span>
-        <span>Hom nay</span>
+        <span>Hôm nay</span>
       </div>
     </div>
   )
 }
 
-function SkuTable() {
+function SkuTable({ skus }: { skus: typeof topSkus }) {
+  if (!skus.length) {
+    return <EmptyState title="Không tìm thấy SKU" body="Thử tìm bằng mã SKU, tên sản phẩm hoặc trạng thái khác." />
+  }
+
   return (
     <div className="table-wrap">
       <table>
         <thead>
           <tr>
             <th>SKU</th>
-            <th>San pham</th>
+            <th>Sản phẩm</th>
             <th>Doanh thu</th>
-            <th>Loi nhuan</th>
-            <th>Bien</th>
-            <th>Trang thai</th>
+            <th>Lợi nhuận</th>
+            <th>Biên</th>
+            <th>Trạng thái</th>
           </tr>
         </thead>
         <tbody>
-          {topSkus.map((sku) => (
+          {skus.map((sku) => (
             <tr key={sku.sku}>
               <td>{sku.sku}</td>
               <td>{sku.name}</td>
@@ -255,7 +418,7 @@ function SkuTable() {
               <td>{sku.profit}</td>
               <td>{sku.margin}</td>
               <td>
-                <StatusBadge tone={sku.status === 'Healthy' ? 'good' : sku.status === 'Missing cost' ? 'warn' : 'danger'}>
+                <StatusBadge tone={sku.status === 'Khỏe' ? 'good' : sku.status === 'Thiếu giá vốn' ? 'warn' : 'danger'}>
                   {sku.status}
                 </StatusBadge>
               </td>
@@ -267,150 +430,271 @@ function SkuTable() {
   )
 }
 
-function UploadsPage() {
+function UploadsPage({
+  uploads,
+  selectedStore,
+  source,
+  query,
+  onAddUpload,
+  onNotice,
+}: {
+  uploads: UploadRecord[]
+  selectedStore: string
+  source: string
+  query: string
+  onAddUpload: (upload: UploadRecord) => void
+  onNotice: (value: string) => void
+}) {
+  const navigate = useNavigate()
+  const inputRef = useRef<HTMLInputElement>(null)
+  const filteredUploads = uploads.filter((upload) => {
+    const normalized = query.trim().toLowerCase()
+    return !normalized || `${upload.file} ${upload.store} ${upload.source}`.toLowerCase().includes(normalized)
+  })
+
+  const handleFiles = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    const nextUpload: UploadRecord = {
+      file: file.name,
+      store: selectedStore === 'Tất cả shop' ? 'Maison Sài Gòn' : selectedStore,
+      source: inferSource(file.name, source),
+      status: 'mapping',
+      rows: 'Đang đọc',
+      time: 'Vừa xong',
+    }
+    onAddUpload(nextUpload)
+    onNotice(`Đã nhận ${file.name}. Hãy kiểm tra mapping trước khi import.`)
+    event.target.value = ''
+    navigate('/uploads/mapping')
+  }
+
   return (
     <div className="page-stack">
       <PageHeader
-        title="Tai len va xu ly"
-        body="Theo doi file, mapping, validation va import job cua tung shop."
-        action={<Button>Tai file moi</Button>}
+        title="Tải lên và xử lý"
+        body="Theo dõi file, mapping, validation và import job của từng shop."
+        action={<Button onClick={() => inputRef.current?.click()}>Tải file mới</Button>}
       />
       <div className="upload-layout">
-        <Panel title="Upload history" className="span-2">
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>File</th>
-                  <th>Store</th>
-                  <th>Source</th>
-                  <th>Status</th>
-                  <th>Rows</th>
-                  <th>Time</th>
-                </tr>
-              </thead>
-              <tbody>
-                {uploads.map((upload) => (
-                  <tr key={upload.file}>
-                    <td>{upload.file}</td>
-                    <td>{upload.store}</td>
-                    <td>{upload.source}</td>
-                    <td>
-                      <StatusBadge tone={statusTone(upload.status)}>{statusLabel(upload.status)}</StatusBadge>
-                    </td>
-                    <td>{upload.rows}</td>
-                    <td>{upload.time}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <Panel title="Lịch sử tải lên" className="span-2">
+          <UploadTable uploads={filteredUploads} />
         </Panel>
-        <Panel title="Next upload">
-          <div className="drop-zone">
-            <DownloadSimple size={26} weight="duotone" />
-            <strong>Keo tha file Excel/CSV vao day</strong>
-            <span>Ho tro .xlsx, .xls va .csv tu Shopee, TikTok Shop, ads va chi phi.</span>
-            <Button variant="secondary">Chon file</Button>
-          </div>
+        <Panel title="Tải file tiếp theo" description="CSV hoặc Excel từ sàn, quảng cáo và chi phí.">
+          <input ref={inputRef} className="visually-hidden" type="file" accept=".csv,.xlsx,.xls" onChange={handleFiles} />
+          <button className="drop-zone" type="button" onClick={() => inputRef.current?.click()}>
+            <DownloadSimple size={28} weight="duotone" />
+            <strong>Kéo thả hoặc chọn file</strong>
+            <span>Hỗ trợ .xlsx, .xls và .csv. Sau khi chọn file, DataBreeze sẽ đưa bạn sang bước map cột.</span>
+            <span className="drop-zone-action">Chọn file từ máy</span>
+          </button>
         </Panel>
       </div>
       <EmptyState
-        title="Mapping la noi DataBreeze tao niem tin."
-        body="Sau khi upload, nguoi dung can thay cot goc, gia tri mau, truong dich va canh bao bat buoc mot cach ro rang."
-        action={<Button variant="secondary">Mo mapping mau</Button>}
+        title="Mapping là nơi DataBreeze tạo niềm tin."
+        body="Sau khi upload, bạn sẽ thấy cột gốc, giá trị mẫu, trường đích và cảnh báo bắt buộc trước khi import."
+        action={<Button variant="secondary" onClick={() => navigate('/uploads/mapping')}>Mở mapping mẫu</Button>}
       />
     </div>
   )
 }
 
-function MappingPage() {
+function UploadTable({ uploads }: { uploads: UploadRecord[] }) {
+  const navigate = useNavigate()
+
+  if (!uploads.length) {
+    return <EmptyState title="Chưa có file phù hợp" body="Xóa ô tìm kiếm hoặc tải file mới để bắt đầu." />
+  }
+
+  return (
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>File</th>
+            <th>Shop</th>
+            <th>Nguồn</th>
+            <th>Trạng thái</th>
+            <th>Dòng</th>
+            <th>Thời gian</th>
+            <th>Hành động</th>
+          </tr>
+        </thead>
+        <tbody>
+          {uploads.map((upload) => (
+            <tr key={`${upload.file}-${upload.time}`}>
+              <td>{upload.file}</td>
+              <td>{upload.store}</td>
+              <td>{upload.source}</td>
+              <td>
+                <StatusBadge tone={statusTone(upload.status)}>{statusLabel(upload.status)}</StatusBadge>
+              </td>
+              <td>{upload.rows}</td>
+              <td>{upload.time}</td>
+              <td>
+                <Button
+                  variant={upload.status === 'mapping' ? 'primary' : 'secondary'}
+                  onClick={() => navigate(upload.status === 'completed' ? '/dashboard' : '/uploads/mapping')}
+                >
+                  {upload.status === 'completed' ? 'Xem dashboard' : 'Tiếp tục'}
+                </Button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function MappingPage({
+  rows,
+  onRowsChange,
+  onContinue,
+  onReset,
+}: {
+  rows: MappingRow[]
+  onRowsChange: (rows: MappingRow[]) => void
+  onContinue: () => void
+  onReset: () => void
+}) {
+  const navigate = useNavigate()
   const [saveTemplate, setSaveTemplate] = useState(true)
+  const requiredMissing = rows.filter((row) => row.required && row.target === 'Không map').length
+  const mappedRequired = rows.filter((row) => row.required && row.target !== 'Không map').length
+  const requiredTotal = rows.filter((row) => row.required).length
+
+  const updateTarget = (source: string, target: string) => {
+    onRowsChange(
+      rows.map((row) =>
+        row.source === source
+          ? {
+              ...row,
+              target,
+              confidence: target === 'Không map' ? 'Thiếu' : row.confidence === 'Thiếu' ? 'Trung bình' : row.confidence,
+            }
+          : row,
+      ),
+    )
+  }
 
   return (
     <div className="page-stack mapping-page">
       <PageHeader
-        title="Map cot file Shopee"
-        body="File shopee_orders_may.xlsx cho shop Maison Sai Gon. Kiem tra cac cot bat buoc truoc khi validation."
-        action={<Button>Tiep tuc kiem tra du lieu</Button>}
+        title="Map cột file Shopee"
+        body="File shopee_orders_may.xlsx cho shop Maison Sài Gòn. Kiểm tra các cột bắt buộc trước khi validation."
+        action={<Button disabled={requiredMissing > 0} onClick={onContinue}>Tiếp tục kiểm tra dữ liệu</Button>}
       />
       <StepIndicator active={1} />
       <div className="mapping-layout">
-        <Panel title="Cot duoc phat hien" className="span-2">
+        <Panel title="Cột được phát hiện" description={`${mappedRequired}/${requiredTotal} cột bắt buộc đã sẵn sàng`} className="span-2">
           <div className="mapping-table">
-            {mappingRows.map((row) => (
+            {rows.map((row) => (
               <div className="mapping-row" key={row.source}>
                 <div>
                   <strong>{row.source}</strong>
-                  <span>Vi du: {row.example || 'Khong co gia tri mau'}</span>
+                  <span>Ví dụ: {row.example || 'Không có giá trị mẫu'}</span>
                 </div>
                 <div>
                   <span>{row.group}</span>
-                  <select value={row.target} onChange={() => undefined} aria-label={`Target field for ${row.source}`}>
-                    <option>{row.target}</option>
-                    <option>Not mapped</option>
-                    <option>Order ID</option>
-                    <option>SKU</option>
-                    <option>Gross revenue</option>
+                  <select value={row.target} onChange={(event) => updateTarget(row.source, event.target.value)} aria-label={`Trường đích cho ${row.source}`}>
+                    {mappingTargets.map((target) => (
+                      <option key={target}>{target}</option>
+                    ))}
                   </select>
                 </div>
-                <StatusBadge tone={row.confidence === 'High' ? 'good' : row.confidence === 'Missing' ? 'warn' : 'info'}>
+                <StatusBadge tone={row.confidence === 'Cao' ? 'good' : row.confidence === 'Thiếu' ? 'warn' : 'info'}>
                   {row.confidence}
                 </StatusBadge>
-                {row.required ? <span className="required-mark">Bat buoc</span> : <span />}
+                {row.required ? <span className="required-mark">Bắt buộc</span> : <span className="optional-mark">Tùy chọn</span>}
               </div>
             ))}
           </div>
           <div className="mapping-footer">
             <label className="checkbox-row">
               <input checked={saveTemplate} type="checkbox" onChange={(event) => setSaveTemplate(event.target.checked)} />
-              Luu mapping nay cho file cung loai sau nay
+              Lưu mapping này cho file cùng loại sau này
             </label>
             <div className="mapping-actions">
-              <Button variant="secondary">Quay lai</Button>
-              <Button>Tiep tuc kiem tra du lieu</Button>
+              <Button variant="secondary" onClick={() => navigate('/uploads')}>Quay lại</Button>
+              <Button variant="secondary" onClick={onReset}>Map lại mẫu</Button>
+              <Button disabled={requiredMissing > 0} onClick={onContinue}>Kiểm tra dữ liệu</Button>
             </div>
           </div>
         </Panel>
-        <Panel title="Truong DataBreeze">
+        <Panel title="Trường DataBreeze" description="Những nhóm dữ liệu dùng để tính dashboard.">
           <div className="field-groups">
-            {['Order basics', 'Revenue and fees', 'Product and SKU', 'Costs'].map((group) => (
+            {[
+              ['Thông tin đơn', 'Mã đơn, ngày tạo, trạng thái và shop.'],
+              ['Doanh thu và phí', 'Tính doanh thu gộp, phí sàn và khuyến mãi.'],
+              ['Sản phẩm và SKU', 'Gắn lợi nhuận về đúng SKU và biến thể.'],
+              ['Giá vốn', 'Có thể bổ sung sau nếu file không có.'],
+            ].map(([group, text]) => (
               <div key={group}>
                 <strong>{group}</strong>
-                <span>{group === 'Costs' ? 'Gia von co the bo sung sau neu file khong co.' : 'Dung de tinh dashboard va insight.'}</span>
+                <span>{text}</span>
               </div>
             ))}
           </div>
+          {requiredMissing > 0 ? (
+            <div className="inline-warning">
+              <WarningCircle size={18} weight="duotone" />
+              <span>Còn {requiredMissing} cột bắt buộc chưa được map.</span>
+            </div>
+          ) : (
+            <div className="inline-success">
+              <CheckCircle size={18} weight="duotone" />
+              <span>Các cột bắt buộc đã sẵn sàng để kiểm tra.</span>
+            </div>
+          )}
         </Panel>
       </div>
     </div>
   )
 }
 
-function ValidationPage() {
+function ValidationPage({
+  complete,
+  onImport,
+  onDownloadErrors,
+}: {
+  complete: boolean
+  onImport: () => void
+  onDownloadErrors: () => void
+}) {
   return (
     <div className="page-stack">
       <PageHeader
-        title="Kiem tra du lieu"
-        body="DataBreeze se import cac dong hop le va tao file loi cho nhung dong can sua."
-        action={<Button>Dong y va cap nhat dashboard</Button>}
+        title="Kiểm tra dữ liệu"
+        body="DataBreeze sẽ import các dòng hợp lệ và tạo file lỗi cho những dòng cần sửa."
+        action={<Button disabled={complete} onClick={onImport}>{complete ? 'Đã cập nhật dashboard' : 'Đồng ý và cập nhật dashboard'}</Button>}
       />
-      <StepIndicator active={2} />
+      <StepIndicator active={complete ? 3 : 2} />
       <div className="metrics-grid four">
-        <MetricCard label="Tong dong" value="4,218" delta="File Shopee" tone="neutral" />
-        <MetricCard label="Hop le" value="3,842" delta="91.1%" tone="good" />
-        <MetricCard label="Canh bao" value="312" delta="Thieu gia von" tone="warn" />
-        <MetricCard label="Loi" value="64" delta="Khong import" tone="danger" />
+        <MetricCard label="Tổng dòng" value="4.218" delta="File Shopee" tone="neutral" />
+        <MetricCard label="Hợp lệ" value="3.842" delta="91,1%" tone="good" />
+        <MetricCard label="Cảnh báo" value="312" delta="Thiếu giá vốn" tone="warn" />
+        <MetricCard label="Lỗi" value="64" delta="Không import" tone="danger" />
       </div>
-      <Panel title="Canh bao can xem">
+      {complete ? (
+        <div className="notice-strip success">
+          <CheckCircle size={18} weight="duotone" />
+          <span>Dashboard đã cập nhật. Các dòng lỗi vẫn được giữ lại để bạn tải xuống và sửa sau.</span>
+        </div>
+      ) : null}
+      <Panel title="Cảnh báo cần xem">
         <div className="warning-list">
-          {['369 dong ban hang thieu gia von', '64 dong thieu SKU', '18 don co ngay khong hop le'].map((warning) => (
+          {['369 dòng bán hàng thiếu giá vốn', '64 dòng thiếu SKU', '18 đơn có ngày không hợp lệ'].map((warning) => (
             <div key={warning}>
               <WarningCircle size={18} weight="duotone" />
               <span>{warning}</span>
-              <Button variant="ghost">Xem dong</Button>
+              <Button variant="ghost">Xem dòng</Button>
             </div>
           ))}
+        </div>
+        <div className="panel-actions">
+          <Button variant="secondary" onClick={onDownloadErrors}>Tải file lỗi</Button>
+          <Button disabled={complete} onClick={onImport}>{complete ? 'Đã import' : 'Import dòng hợp lệ'}</Button>
         </div>
       </Panel>
     </div>
@@ -420,7 +704,7 @@ function ValidationPage() {
 function StoresPage() {
   return (
     <div className="page-stack">
-      <PageHeader title="Shop" body="Quan ly shop va trang thai du lieu trong workspace hien tai." action={<Button>Them shop</Button>} />
+      <PageHeader title="Shop" body="Quản lý shop và trạng thái dữ liệu trong workspace hiện tại." action={<Button>Thêm shop</Button>} />
       <div className="list-grid">
         {stores.map((store) => (
           <Panel key={store.name}>
@@ -432,15 +716,15 @@ function StoresPage() {
                 <strong>{store.name}</strong>
                 <span>{store.platform}</span>
               </div>
-              <StatusBadge tone={store.status === 'Active' ? 'good' : 'warn'}>{store.status}</StatusBadge>
+              <StatusBadge tone={store.status === 'Đang hoạt động' ? 'good' : 'warn'}>{store.status}</StatusBadge>
             </div>
             <dl className="compact-facts">
               <div>
-                <dt>Last import</dt>
+                <dt>Lần import gần nhất</dt>
                 <dd>{store.lastImport}</dd>
               </div>
               <div>
-                <dt>Revenue</dt>
+                <dt>Doanh thu</dt>
                 <dd>{store.revenue}</dd>
               </div>
             </dl>
@@ -451,104 +735,170 @@ function StoresPage() {
   )
 }
 
-function CostsPage() {
+function CostsPage({
+  items,
+  onCostChange,
+  onSave,
+}: {
+  items: CostItem[]
+  onCostChange: (sku: string, value: string) => void
+  onSave: (sku: string) => void
+}) {
   return (
     <div className="page-stack">
       <PageHeader
-        title="Product Costs"
-        body="Gia von quyet dinh loi nhuan co dang tin hay khong. Xu ly SKU thieu cost truoc."
-        action={<Button>Them gia von</Button>}
+        title="Giá vốn sản phẩm"
+        body="Giá vốn quyết định lợi nhuận có đáng tin hay không. Xử lý SKU thiếu cost trước."
+        action={<Button>Nhập giá vốn hàng loạt</Button>}
       />
-      <Panel title="SKU thieu gia von">
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>SKU</th>
-                <th>San pham</th>
-                <th>Don hang</th>
-                <th>Doanh thu anh huong</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {missingCosts.map((cost) => (
-                <tr key={cost.sku}>
-                  <td>{cost.sku}</td>
-                  <td>{cost.product}</td>
-                  <td>{cost.orders}</td>
-                  <td>{cost.affected}</td>
-                  <td>
-                    <Button variant="secondary">Them cost</Button>
-                  </td>
+      <Panel title="SKU thiếu giá vốn" description={`${items.length} SKU đang ảnh hưởng tới lợi nhuận ròng`}>
+        {items.length ? (
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>SKU</th>
+                  <th>Sản phẩm</th>
+                  <th>Đơn hàng</th>
+                  <th>Doanh thu ảnh hưởng</th>
+                  <th>Giá vốn / đơn</th>
+                  <th>Hành động</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {items.map((cost) => (
+                  <tr key={cost.sku}>
+                    <td>{cost.sku}</td>
+                    <td>{cost.product}</td>
+                    <td>{cost.orders}</td>
+                    <td>{cost.affected}</td>
+                    <td>
+                      <input
+                        className="table-input"
+                        value={cost.unitCost}
+                        inputMode="numeric"
+                        onChange={(event) => onCostChange(cost.sku, event.target.value)}
+                        placeholder="VD: 92000"
+                        aria-label={`Giá vốn cho ${cost.sku}`}
+                      />
+                    </td>
+                    <td>
+                      <Button variant="secondary" disabled={!cost.unitCost.trim()} onClick={() => onSave(cost.sku)}>
+                        Lưu giá vốn
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <EmptyState title="Không còn SKU thiếu giá vốn" body="Dashboard lợi nhuận đã sẵn sàng hơn để ra quyết định." />
+        )}
       </Panel>
     </div>
   )
 }
 
-function ExpensesPage() {
+function ExpensesPage({ expenses, onAddExpense }: { expenses: ExpenseItem[]; onAddExpense: (expense: ExpenseItem) => void }) {
+  const [draft, setDraft] = useState({ category: 'Quảng cáo', description: '', store: 'Tất cả shop', amount: '' })
+
+  const submitExpense = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!draft.description.trim() || !draft.amount.trim()) return
+    onAddExpense({ ...draft, date: 'Hôm nay' })
+    setDraft({ category: 'Quảng cáo', description: '', store: 'Tất cả shop', amount: '' })
+  }
+
   return (
     <div className="page-stack">
       <PageHeader
-        title="Expenses"
-        body="Ghi nhan chi phi van hanh de tinh loi nhuan rong theo ngay va theo shop."
-        action={<Button>Them chi phi</Button>}
+        title="Chi phí"
+        body="Ghi nhận chi phí vận hành để tính lợi nhuận ròng theo ngày và theo shop."
+        action={<Button type="submit" form="expense-form">Thêm chi phí</Button>}
       />
-      <Panel title="Chi phi gan day">
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Category</th>
-                <th>Description</th>
-                <th>Store</th>
-                <th>Amount</th>
-                <th>Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {expenses.map((expense) => (
-                <tr key={expense.description}>
-                  <td>{expense.category}</td>
-                  <td>{expense.description}</td>
-                  <td>{expense.store}</td>
-                  <td>{expense.amount}</td>
-                  <td>{expense.date}</td>
+      <div className="expenses-layout">
+        <Panel title="Thêm chi phí nhanh">
+          <form id="expense-form" className="expense-form" onSubmit={submitExpense}>
+            <label>
+              <span>Nhóm chi phí</span>
+              <select value={draft.category} onChange={(event) => setDraft((current) => ({ ...current, category: event.target.value }))}>
+                {['Quảng cáo', 'Vận hành', 'Kho vận', 'Công cụ'].map((option) => (
+                  <option key={option}>{option}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span>Mô tả</span>
+              <input value={draft.description} onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))} placeholder="VD: Ads TikTok tháng 6" />
+            </label>
+            <label>
+              <span>Shop</span>
+              <select value={draft.store} onChange={(event) => setDraft((current) => ({ ...current, store: event.target.value }))}>
+                {storeOptions.map((option) => (
+                  <option key={option}>{option}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span>Số tiền</span>
+              <input value={draft.amount} onChange={(event) => setDraft((current) => ({ ...current, amount: event.target.value }))} placeholder="VD: 2,4M" />
+            </label>
+          </form>
+        </Panel>
+        <Panel title="Chi phí gần đây" className="span-2">
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nhóm</th>
+                  <th>Mô tả</th>
+                  <th>Shop</th>
+                  <th>Số tiền</th>
+                  <th>Ngày</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Panel>
+              </thead>
+              <tbody>
+                {expenses.map((expense, index) => (
+                  <tr key={`${expense.description}-${index}`}>
+                    <td>{expense.category}</td>
+                    <td>{expense.description}</td>
+                    <td>{expense.store}</td>
+                    <td>{expense.amount}</td>
+                    <td>{expense.date}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Panel>
+      </div>
     </div>
   )
 }
 
-function InsightsPage() {
+function InsightsPage({ onResolveCosts }: { onResolveCosts: () => void }) {
   return (
     <div className="page-stack">
       <PageHeader
-        title="Insights"
-        body="Canh bao kinh doanh duoc gan voi so lieu va hanh dong tiep theo."
-        action={<Button>Generate insight</Button>}
+        title="Gợi ý hành động"
+        body="Cảnh báo kinh doanh được gắn với số liệu và hành động tiếp theo."
+        action={<Button variant="secondary">Làm mới gợi ý</Button>}
       />
       <div className="insight-list">
         {insights.map((insight) => (
           <Panel key={insight.title}>
             <div className="insight-row">
-              <StatusBadge tone={insight.severity === 'High' ? 'danger' : insight.severity === 'Medium' ? 'warn' : 'info'}>
+              <StatusBadge tone={insight.severity === 'Cao' ? 'danger' : insight.severity === 'Vừa' ? 'warn' : 'info'}>
                 {insight.severity}
               </StatusBadge>
               <div>
                 <strong>{insight.title}</strong>
                 <span>{insight.summary}</span>
               </div>
-              <Button variant="secondary">{insight.action}</Button>
+              <Button variant="secondary" onClick={insight.action === 'Thêm giá vốn' ? onResolveCosts : undefined}>
+                {insight.action}
+              </Button>
             </div>
           </Panel>
         ))}
@@ -560,13 +910,13 @@ function InsightsPage() {
 function UsagePage() {
   return (
     <div className="page-stack">
-      <PageHeader title="Plan & Usage" body="Theo doi gioi han truoc khi upload bi chan." action={<Button>Upgrade</Button>} />
+      <PageHeader title="Gói & sử dụng" body="Theo dõi giới hạn trước khi upload bị chặn." action={<Button>Nâng cấp</Button>} />
       <div className="usage-grid">
         {[
-          ['Uploads', '42 / 80', '52%'],
-          ['Rows processed', '318k / 500k', '64%'],
-          ['Stores', '3 / 5', '60%'],
-          ['Insight runs', '18 / 40', '45%'],
+          ['Tệp tải lên', '42 / 80', '52%'],
+          ['Dòng đã xử lý', '318k / 500k', '64%'],
+          ['Shop', '3 / 5', '60%'],
+          ['Lượt tạo gợi ý', '18 / 40', '45%'],
         ].map(([label, value, percent]) => (
           <Panel key={label}>
             <div className="usage-card">
@@ -575,7 +925,7 @@ function UsagePage() {
               <div className="usage-bar">
                 <span style={{ width: percent }} />
               </div>
-              <small>{percent} used</small>
+              <small>Đã dùng {percent}</small>
             </div>
           </Panel>
         ))}
@@ -584,21 +934,30 @@ function UsagePage() {
   )
 }
 
-function statusTone(status: string) {
+function statusTone(status: UploadStatus): Tone {
   if (status === 'completed') return 'good'
   if (status === 'warning' || status === 'mapping' || status === 'validating') return 'warn'
   if (status === 'failed') return 'danger'
   return 'info'
 }
 
-function statusLabel(status: string) {
-  const labels: Record<string, string> = {
-    mapping: 'Waiting for mapping',
-    validating: 'Validating',
-    running: 'Running',
-    completed: 'Completed',
-    warning: 'Warning',
-    failed: 'Failed',
+function statusLabel(status: UploadStatus) {
+  const labels: Record<UploadStatus, string> = {
+    mapping: 'Đang map cột',
+    validating: 'Đang kiểm tra',
+    running: 'Đang xử lý',
+    completed: 'Hoàn tất',
+    warning: 'Cần xem lại',
+    failed: 'Thất bại',
   }
-  return labels[status] ?? status
+  return labels[status]
+}
+
+function inferSource(fileName: string, selectedSource: string) {
+  const lower = fileName.toLowerCase()
+  if (selectedSource !== 'Tất cả nguồn') return selectedSource
+  if (lower.includes('tiktok')) return 'TikTok Shop'
+  if (lower.includes('ads') || lower.includes('google')) return 'Google Ads'
+  if (lower.includes('expense') || lower.includes('chi_phi')) return 'Chi phí'
+  return 'Shopee'
 }

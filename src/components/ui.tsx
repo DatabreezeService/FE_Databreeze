@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
-
-type Tone = 'neutral' | 'good' | 'warn' | 'danger' | 'info'
+import type { Tone } from '../data/sampleData'
 
 const toneClass: Record<Tone, string> = {
   neutral: 'tone-neutral',
@@ -15,16 +14,23 @@ export function Button({
   variant = 'primary',
   type = 'button',
   disabled,
+  loading,
   onClick,
+  className = '',
+  form,
 }: {
   children: ReactNode
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger'
   type?: 'button' | 'submit'
   disabled?: boolean
+  loading?: boolean
   onClick?: () => void
+  className?: string
+  form?: string
 }) {
   return (
-    <button className={`button button-${variant}`} type={type} disabled={disabled} onClick={onClick}>
+    <button className={`button button-${variant} ${className}`} type={type} form={form} disabled={disabled || loading} onClick={onClick}>
+      {loading ? <span className="button-spinner" aria-hidden="true" /> : null}
       {children}
     </button>
   )
@@ -38,18 +44,23 @@ export function Panel({
   children,
   className = '',
   title,
+  description,
   action,
 }: {
   children: ReactNode
   className?: string
   title?: string
+  description?: string
   action?: ReactNode
 }) {
   return (
     <section className={`panel ${className}`}>
-      {(title || action) && (
+      {(title || description || action) && (
         <div className="panel-header">
-          {title ? <h2>{title}</h2> : <span />}
+          <div>
+            {title ? <h2>{title}</h2> : null}
+            {description ? <p>{description}</p> : null}
+          </div>
           {action}
         </div>
       )}
@@ -96,16 +107,16 @@ export function EmptyState({
         <h2>{title}</h2>
         <p>{body}</p>
       </div>
-      {action}
+      {action ? <div className="empty-state-action">{action}</div> : null}
     </div>
   )
 }
 
 export function StepIndicator({ active }: { active: number }) {
-  const steps = ['Upload', 'Map cot', 'Kiem tra', 'Hoan tat']
+  const steps = ['Tải file', 'Map cột', 'Kiểm tra', 'Hoàn tất']
 
   return (
-    <ol className="step-indicator" aria-label="Upload progress">
+    <ol className="step-indicator" aria-label="Tiến trình tải file">
       {steps.map((step, index) => {
         const state = index < active ? 'done' : index === active ? 'active' : 'idle'
         return (
@@ -132,6 +143,32 @@ export function Field({
     <label className="field">
       <span>{label}</span>
       <input value={value} readOnly aria-describedby={helper ? `${label}-helper` : undefined} />
+      {helper ? <small id={`${label}-helper`}>{helper}</small> : null}
+    </label>
+  )
+}
+
+export function SelectField({
+  label,
+  value,
+  options,
+  onChange,
+  helper,
+}: {
+  label: string
+  value: string
+  options: string[]
+  onChange: (value: string) => void
+  helper?: string
+}) {
+  return (
+    <label className="field">
+      <span>{label}</span>
+      <select value={value} onChange={(event) => onChange(event.target.value)} aria-describedby={helper ? `${label}-helper` : undefined}>
+        {options.map((option) => (
+          <option key={option}>{option}</option>
+        ))}
+      </select>
       {helper ? <small id={`${label}-helper`}>{helper}</small> : null}
     </label>
   )

@@ -1,33 +1,38 @@
-import { CheckCircle, Lightbulb, Tag, UploadSimple, WarningCircle } from '@phosphor-icons/react'
+import { CaretRight, CheckCircle, UploadSimple, WarningCircle } from '@phosphor-icons/react'
 import { Link } from 'react-router-dom'
+import '../styles/landing.css'
+
+const incomingFiles = [
+  ['Shopee', 'orders_thang_06.xlsx', '4.218 dòng'],
+  ['TikTok Shop', 'tiktok_doanh_thu.csv', '1.906 dòng'],
+  ['Ads', 'chi_phi_quang_cao.xlsx', '12 chiến dịch'],
+]
+
+const processSteps = ['Map cột', 'Kiểm tra lỗi', 'Bổ sung giá vốn']
 
 const workflowSteps = [
   {
-    title: 'Tải file',
-    body: 'Nhận file Shopee, TikTok Shop, quảng cáo và chi phí mà không cần sửa mẫu trước.',
+    title: 'Tải file thật',
+    body: 'Nhận file Shopee, TikTok Shop, quảng cáo và chi phí mà không bắt seller sửa mẫu trước.',
     icon: UploadSimple,
   },
   {
-    title: 'Map cột',
-    body: 'DataBreeze gợi ý trường đích, hiển thị cột bắt buộc và giá trị mẫu để bạn kiểm tra.',
+    title: 'Thấy dữ liệu đang thiếu gì',
+    body: 'Cột bắt buộc, giá trị mẫu, lỗi ngày tháng và SKU thiếu cost đều được đưa ra trước khi import.',
+    icon: WarningCircle,
+  },
+  {
+    title: 'Chốt dashboard đủ tin',
+    body: 'Doanh thu, phí, giá vốn và lợi nhuận được cập nhật khi dữ liệu đã qua mapping và validation.',
     icon: CheckCircle,
-  },
-  {
-    title: 'Bổ sung giá vốn',
-    body: 'Những SKU thiếu cost được gom lại thành một danh sách hành động rõ ràng.',
-    icon: Tag,
-  },
-  {
-    title: 'Xem lợi nhuận',
-    body: 'Dashboard cập nhật doanh thu, phí, lợi nhuận và cảnh báo theo từng shop.',
-    icon: Lightbulb,
   },
 ]
 
-const proofRows = [
-  ['4.218', 'dòng Shopee được kiểm tra trước khi import'],
-  ['369', 'đơn hàng thiếu giá vốn được phát hiện'],
-  ['86%', 'độ sẵn sàng dữ liệu cho dashboard lợi nhuận'],
+const trustLanes = [
+  ['3.842', 'dòng hợp lệ', 'Sẵn sàng cập nhật dashboard'],
+  ['312', 'cảnh báo', 'Cho phép import nhưng vẫn cần xem'],
+  ['64', 'dòng lỗi', 'Giữ lại để tải xuống và sửa'],
+  ['369', 'thiếu giá vốn', 'Tạo danh sách hành động theo SKU'],
 ]
 
 export function LandingPage() {
@@ -40,7 +45,7 @@ export function LandingPage() {
         </Link>
         <nav>
           <a href="#workflow">Quy trình</a>
-          <a href="#trust">Dữ liệu</a>
+          <a href="#trust">Độ tin cậy</a>
           <a href="#start">Bắt đầu</a>
         </nav>
         <Link className="landing-nav-cta" to="/dashboard">
@@ -50,111 +55,137 @@ export function LandingPage() {
 
       <main>
         <section className="landing-hero" aria-labelledby="landing-title">
-          <div className="landing-hero-scene" aria-hidden="true">
-            <div className="landing-preview-window">
-              <div className="landing-preview-bar">
-                <img src="/brand/databreeze-wordmark-blue.png" alt="" />
-                <span>Maison Commerce</span>
-              </div>
-              <div className="landing-preview-grid">
-                <div className="landing-preview-main">
-                  <span>Lợi nhuận ròng</span>
-                  <strong>37,8M</strong>
-                  <div className="landing-chart">
-                    <i style={{ height: '34%' }} />
-                    <i style={{ height: '48%' }} />
-                    <i style={{ height: '42%' }} />
-                    <i style={{ height: '63%' }} />
-                    <i style={{ height: '58%' }} />
-                    <i style={{ height: '78%' }} />
-                    <i style={{ height: '86%' }} />
-                  </div>
-                </div>
-                <div className="landing-preview-side">
-                  <span>Cần xử lý</span>
-                  <strong>3 việc</strong>
-                  <p>SKU thiếu giá vốn, biên thấp và dòng lỗi import.</p>
-                </div>
-              </div>
-              <div className="landing-signal-list">
-                <div className="landing-signal-row">
-                  <CheckCircle size={18} weight="duotone" />
-                  <span>4/4 cột bắt buộc đã map</span>
-                </div>
-                <div className="landing-signal-row">
-                  <WarningCircle size={18} weight="duotone" />
-                  <span>369 dòng cần bổ sung giá vốn</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
           <div className="landing-hero-copy">
             <img className="landing-wordmark" src="/brand/databreeze-wordmark-blue.png" alt="DataBreeze" />
-            <h1 id="landing-title">Biến file bán hàng thành lợi nhuận rõ ràng.</h1>
+            <h1 id="landing-title">Lợi nhuận rõ ràng từ những file bán hàng lộn xộn.</h1>
             <p>
-              DataBreeze giúp seller Việt tải file marketplace, map cột, kiểm tra lỗi, bổ sung giá vốn và xem lợi nhuận theo shop trong một workspace dễ tin.
+              DataBreeze giúp seller Việt đưa file marketplace vào một quy trình có kiểm tra, có cảnh báo và có dashboard lợi nhuận đủ tin để ra quyết định.
             </p>
             <div className="landing-actions">
               <Link className="landing-button landing-button-primary" to="/dashboard">
                 Vào dashboard
+                <CaretRight size={17} weight="bold" />
               </Link>
               <a className="landing-button landing-button-secondary" href="#workflow">
                 Xem quy trình
               </a>
             </div>
           </div>
+
+          <div className="landing-flow-stage" aria-hidden="true">
+            <div className="landing-file-stack">
+              {incomingFiles.map(([source, name, rows]) => (
+                <div className="landing-file-chip" key={name}>
+                  <span>{source}</span>
+                  <strong>{name}</strong>
+                  <small>{rows}</small>
+                </div>
+              ))}
+            </div>
+
+            <div className="landing-flow-core">
+              <div className="landing-core-head">
+                <img src="/brand/databreeze-mark-dark.png" alt="" />
+                <div>
+                  <span>DataBreeze import</span>
+                  <strong>Đang làm sạch dữ liệu</strong>
+                </div>
+              </div>
+              <div className="landing-core-line">
+                <span />
+              </div>
+              <div className="landing-core-steps">
+                {processSteps.map((step) => (
+                  <div key={step}>
+                    <CheckCircle size={17} weight="duotone" />
+                    <span>{step}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="landing-profit-board">
+              <div className="landing-profit-topline">
+                <span>Lợi nhuận ròng</span>
+                <strong>37,8M</strong>
+              </div>
+              <div className="landing-profit-chart">
+                <i />
+                <i />
+                <i />
+                <i />
+                <i />
+                <i />
+              </div>
+              <div className="landing-profit-alert">
+                <WarningCircle size={17} weight="duotone" />
+                <span>369 SKU cần bổ sung giá vốn</span>
+              </div>
+            </div>
+          </div>
         </section>
 
         <section className="landing-proof" aria-label="DataBreeze proof points">
-          {proofRows.map(([value, label]) => (
-            <div key={label}>
-              <strong>{value}</strong>
-              <span>{label}</span>
-            </div>
-          ))}
+          <p>Không chỉ gom file vào một chỗ. DataBreeze cho seller biết số nào đáng tin, số nào cần sửa và việc nào nên làm tiếp theo.</p>
+          <div>
+            <strong>86%</strong>
+            <span>độ sẵn sàng dữ liệu</span>
+          </div>
+          <div>
+            <strong>4 nguồn</strong>
+            <span>bán hàng, ads, chi phí, giá vốn</span>
+          </div>
         </section>
 
         <section id="workflow" className="landing-section">
           <div className="landing-section-copy">
             <span>Quy trình vận hành</span>
-            <h2>Từ file thô đến dashboard có thể tin.</h2>
-            <p>Mỗi bước cho người bán thấy dữ liệu đang ở đâu, thiếu gì và hành động tiếp theo là gì.</p>
+            <h2>Từ file thô đến quyết định có căn cứ.</h2>
+            <p>Mỗi bước giữ lại dấu vết dữ liệu: file nào đã vào, lỗi nào bị chặn và dashboard nào đã được cập nhật.</p>
           </div>
           <div className="landing-workflow">
             {workflowSteps.map((step) => {
               const Icon = step.icon
               return (
-                <div className="landing-workflow-item" key={step.title}>
-                  <Icon size={22} weight="duotone" />
+                <article className="landing-workflow-item" key={step.title}>
+                  <Icon size={24} weight="duotone" />
                   <div>
                     <strong>{step.title}</strong>
                     <p>{step.body}</p>
                   </div>
-                </div>
+                </article>
               )
             })}
           </div>
         </section>
 
-        <section id="trust" className="landing-detail">
-          <div>
+        <section id="trust" className="landing-trust">
+          <div className="landing-trust-copy">
             <span>Dữ liệu trước, quyết định sau</span>
             <h2>Không giấu lỗi import dưới một con số đẹp.</h2>
+            <p>
+              Seller không cần biết ETL hay SQL. Họ cần biết file nào đã vào, dòng nào bị chặn, SKU nào thiếu cost và dashboard nào đủ tin để hành động.
+            </p>
           </div>
-          <div className="landing-detail-list">
-            <p>DataBreeze tách rõ dòng hợp lệ, cảnh báo, lỗi bị bỏ qua và SKU thiếu giá vốn trước khi dashboard được cập nhật.</p>
-            <p>Seller không cần biết ETL hay SQL. Họ chỉ cần biết file nào đã vào, dòng nào cần sửa và lợi nhuận nào đủ tin để hành động.</p>
+          <div className="landing-trust-lanes">
+            {trustLanes.map(([value, label, body]) => (
+              <div className="landing-trust-row" key={label}>
+                <strong>{value}</strong>
+                <span>{label}</span>
+                <p>{body}</p>
+              </div>
+            ))}
           </div>
         </section>
 
         <section id="start" className="landing-final">
           <div>
-            <h2>Sẵn sàng thử workspace DataBreeze?</h2>
-            <p>Mở dashboard mẫu, xem workflow upload và tiếp tục từ đó.</p>
+            <img src="/brand/databreeze-wordmark-blue.png" alt="DataBreeze" />
+            <h2>Mở thử workspace và xem luồng dữ liệu chạy thật.</h2>
           </div>
           <Link className="landing-button landing-button-primary" to="/dashboard">
             Mở sản phẩm
+            <CaretRight size={17} weight="bold" />
           </Link>
         </section>
       </main>

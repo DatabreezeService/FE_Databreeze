@@ -55,6 +55,16 @@ export function LandingPage() {
 
       <main>
         <section className="landing-hero" aria-labelledby="landing-title">
+          <div className="landing-hero-backdrop" aria-hidden="true">
+            <img className="landing-bg-mark" src="/brand/databreeze-mark-dark.png" alt="" />
+            <span className="landing-bg-lane landing-bg-lane-one" />
+            <span className="landing-bg-lane landing-bg-lane-two" />
+            <span className="landing-bg-lane landing-bg-lane-three" />
+            <span className="landing-bg-token landing-bg-token-one">Shopee CSV</span>
+            <span className="landing-bg-token landing-bg-token-two">Thiếu giá vốn</span>
+            <span className="landing-bg-token landing-bg-token-three">Lợi nhuận sẵn sàng</span>
+          </div>
+
           <div className="landing-hero-copy">
             <img className="landing-wordmark" src="/brand/databreeze-wordmark-blue.png" alt="DataBreeze" />
             <h1 id="landing-title">Lợi nhuận rõ ràng từ những file bán hàng lộn xộn.</h1>

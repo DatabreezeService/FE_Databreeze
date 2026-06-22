@@ -41,6 +41,7 @@ import {
   type UploadStatus,
 } from '../data/sampleData'
 import { Button, EmptyState, MetricCard, Panel, SelectField, StatusBadge, StepIndicator } from '../components/ui'
+import { LandingPage } from './LandingPage'
 
 const navItems = [
   { path: '/dashboard', label: 'Tổng quan', icon: House },
@@ -53,6 +54,15 @@ const navItems = [
 ]
 
 export function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/*" element={<ProductApp />} />
+    </Routes>
+  )
+}
+
+function ProductApp() {
   const navigate = useNavigate()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [selectedStore, setSelectedStore] = useState(storeOptions[0])

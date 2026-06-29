@@ -19,8 +19,10 @@ import {
 } from '@phosphor-icons/react'
 import { useMemo, useRef, useState } from 'react'
 import { NavLink, Navigate, Route, Routes, useNavigate } from 'react-router-dom'
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import {
   dateRangeOptions,
+  formatProfitValue,
   initialExpenses,
   initialMappingRows,
   initialMissingCosts,
@@ -28,7 +30,7 @@ import {
   insights,
   kpis,
   mappingTargets,
-  profitSeries,
+  profitTrendData,
   sourceOptions,
   storeOptions,
   stores,
@@ -36,6 +38,7 @@ import {
   type CostItem,
   type ExpenseItem,
   type MappingRow,
+  type ProfitTrendPoint,
   type Tone,
   type UploadRecord,
   type UploadStatus,
@@ -376,27 +379,97 @@ function ActionList({ onResolveCosts }: { onResolveCosts: () => void }) {
 }
 
 function ProfitChart() {
-  const max = Math.max(...profitSeries)
-  const points = profitSeries
-    .map((value, index) => {
-      const x = (index / (profitSeries.length - 1)) * 100
-      const y = 100 - (value / max) * 86
-      return `${x},${y}`
-    })
-    .join(' ')
+  const latest = profitTrendData.at(-1)
+  const peak = profitTrendData.reduce((highest, point) => (point.profit > highest.profit ? point : highest), profitTrendData[0])
+  const first = profitTrendData[0]
 
   return (
     <div className="chart-wrap">
-      <svg viewBox="0 0 100 100" role="img" aria-label="Biểu đồ xu hướng lợi nhuận">
-        <polyline className="chart-grid" points="0,80 100,80" />
-        <polyline className="chart-grid" points="0,55 100,55" />
-        <polyline className="chart-grid" points="0,30 100,30" />
-        <polyline className="chart-line" points={points} />
-      </svg>
-      <div className="chart-caption">
-        <span>7 thg 5</span>
-        <span>Hôm nay</span>
+      <div className="chart-container">
+        <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 640, height: 260 }}>
+          <AreaChart data={profitTrendData} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
+            <defs>
+              <linearGradient id="profitFill" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.24} />
+                <stop offset="92%" stopColor="var(--color-primary)" stopOpacity={0.03} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid stroke="var(--color-border)" strokeDasharray="4 7" vertical={false} />
+            <XAxis
+              dataKey="label"
+              axisLine={false}
+              tickLine={false}
+              interval="preserveStartEnd"
+              minTickGap={20}
+              tick={{ fill: 'var(--color-muted)', fontSize: 12 }}
+            />
+            <YAxis
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: 'var(--color-muted)', fontSize: 12 }}
+              tickFormatter={formatProfitValue}
+              width={48}
+            />
+            <Tooltip content={<ProfitTooltip />} cursor={{ stroke: 'var(--color-border-strong)', strokeDasharray: '4 4' }} />
+            <Area
+              type="monotone"
+              dataKey="profit"
+              name="Lợi nhuận"
+              stroke="var(--color-primary)"
+              strokeWidth={3}
+              fill="url(#profitFill)"
+              activeDot={{ r: 5, strokeWidth: 3, stroke: 'var(--color-surface)', fill: 'var(--color-primary)' }}
+              dot={{ r: 3, strokeWidth: 2, stroke: 'var(--color-surface)', fill: 'var(--color-primary)' }}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
       </div>
+      <div className="chart-stats" aria-label="Tóm tắt lợi nhuận theo ngày">
+        <div>
+          <span>Hiện tại</span>
+          <strong>{latest ? formatProfitValue(latest.profit) : '-'}</strong>
+        </div>
+        <div>
+          <span>Cao nhất</span>
+          <strong>{formatProfitValue(peak.profit)}</strong>
+        </div>
+        <div>
+          <span>Tăng từ đầu kỳ</span>
+          <strong>+{first && latest ? formatProfitValue(latest.profit - first.profit) : '-'}</strong>
+        </div>
+      </div>
+      <div className="chart-caption">
+        <span>{first.label}</span>
+        <span>{latest?.label}</span>
+      </div>
+    </div>
+  )
+}
+
+type ProfitTooltipEntry = {
+  value?: number
+  payload?: ProfitTrendPoint
+}
+
+function ProfitTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean
+  payload?: ProfitTooltipEntry[]
+  label?: string
+}) {
+  if (!active || !payload?.length) return null
+
+  const point = payload[0]?.payload
+  const profit = typeof payload[0]?.value === 'number' ? payload[0].value : point?.profit
+
+  return (
+    <div className="chart-tooltip">
+      <strong>{label}</strong>
+      <span>Lợi nhuận: {typeof profit === 'number' ? formatProfitValue(profit) : '-'}</span>
+      {typeof point?.revenue === 'number' ? <span>Doanh thu: {formatProfitValue(point.revenue)}</span> : null}
     </div>
   )
 }

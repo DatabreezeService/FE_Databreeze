@@ -48,7 +48,28 @@ export const kpis: Array<{ label: string; value: string; delta: string; tone: To
   { label: 'Đơn hàng', value: '2.418', delta: '+194', tone: 'neutral' },
 ]
 
-export const profitSeries = [18, 24, 21, 32, 28, 37, 42, 39, 48, 44, 52, 58]
+export type ProfitTrendPoint = {
+  label: string
+  profit: number
+  revenue: number
+}
+
+export const profitTrendData: ProfitTrendPoint[] = [
+  { label: '7 thg 5', profit: 18, revenue: 62 },
+  { label: '10 thg 5', profit: 24, revenue: 70 },
+  { label: '13 thg 5', profit: 21, revenue: 68 },
+  { label: '16 thg 5', profit: 32, revenue: 82 },
+  { label: '19 thg 5', profit: 28, revenue: 76 },
+  { label: '22 thg 5', profit: 37, revenue: 92 },
+  { label: '25 thg 5', profit: 42, revenue: 104 },
+  { label: '28 thg 5', profit: 39, revenue: 98 },
+  { label: '31 thg 5', profit: 48, revenue: 116 },
+  { label: '3 thg 6', profit: 44, revenue: 108 },
+  { label: '6 thg 6', profit: 52, revenue: 126 },
+  { label: 'Hôm nay', profit: 58, revenue: 138 },
+]
+
+export const formatProfitValue = (value: number) => `${value}M`
 
 export const topSkus = [
   { sku: 'DB-TEE-001', name: 'Áo thun basic', revenue: '31,2M', profit: '9,8M', margin: '31,4%', status: 'Khỏe' },

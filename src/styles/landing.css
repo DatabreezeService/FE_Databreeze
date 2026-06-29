@@ -39,8 +39,8 @@
 }
 
 .landing-brand {
-  width: 152px;
-  min-width: 152px;
+  width: clamp(188px, 14vw, 220px);
+  min-width: 188px;
   color: var(--landing-ink);
   font-size: 15px;
   font-weight: 800;
@@ -952,6 +952,11 @@
     padding: 0 16px;
   }
 
+  .landing-brand {
+    width: 176px;
+    min-width: 176px;
+  }
+
   .landing-nav nav {
     display: none;
   }
@@ -1156,6 +1161,15 @@
 }
 
 @media (max-width: 520px) {
+  .landing-nav {
+    gap: 12px;
+  }
+
+  .landing-brand {
+    width: 164px;
+    min-width: 164px;
+  }
+
   .landing-nav-cta {
     min-height: 36px;
     padding: 0 11px;
@@ -1193,6 +1207,13 @@
 
   .landing-trust-row p {
     grid-column: auto;
+  }
+}
+
+@media (max-width: 380px) {
+  .landing-brand {
+    width: 152px;
+    min-width: 152px;
   }
 }
 

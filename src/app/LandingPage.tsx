@@ -1,6 +1,5 @@
 import { CaretRight, CheckCircle, UploadSimple, WarningCircle } from '@phosphor-icons/react'
 import { Link } from 'react-router-dom'
-import '../styles/landing.css'
 
 const incomingFiles = [
   ['Shopee', 'orders_thang_06.xlsx', '4.218 dòng'],

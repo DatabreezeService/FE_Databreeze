@@ -12,26 +12,26 @@ const processSteps = ['Map cột', 'Kiểm tra lỗi', 'Bổ sung giá vốn']
 const workflowSteps = [
   {
     title: 'Tải file thật',
-    body: 'Nhận file Shopee, TikTok Shop, quảng cáo và chi phí mà không bắt seller sửa mẫu trước.',
+    body: 'Nhận file marketplace, quảng cáo và chi phí mà không bắt seller sửa mẫu trước.',
     icon: UploadSimple,
   },
   {
-    title: 'Thấy dữ liệu đang thiếu gì',
-    body: 'Cột bắt buộc, giá trị mẫu, lỗi ngày tháng và SKU thiếu cost đều được đưa ra trước khi import.',
+    title: 'Nhìn rõ điểm thiếu',
+    body: 'Cột bắt buộc, ngày tháng, SKU thiếu cost và giá trị lạ được đưa ra trước khi import.',
     icon: WarningCircle,
   },
   {
-    title: 'Chốt dashboard đủ tin',
-    body: 'Doanh thu, phí, giá vốn và lợi nhuận được cập nhật khi dữ liệu đã qua mapping và validation.',
+    title: 'Chốt số đủ tin',
+    body: 'Doanh thu, phí, giá vốn và lợi nhuận chỉ cập nhật sau khi dữ liệu qua mapping và validation.',
     icon: CheckCircle,
   },
 ]
 
 const trustLanes = [
-  ['3.842', 'dòng hợp lệ', 'Sẵn sàng cập nhật dashboard'],
-  ['312', 'cảnh báo', 'Cho phép import nhưng vẫn cần xem'],
-  ['64', 'dòng lỗi', 'Giữ lại để tải xuống và sửa'],
-  ['369', 'thiếu giá vốn', 'Tạo danh sách hành động theo SKU'],
+  ['Hợp lệ', 'Dòng sẵn sàng', 'Đưa thẳng vào dashboard sau khi mapping.'],
+  ['Cảnh báo', 'Vẫn cho import', 'Giữ lại dấu hiệu cần xem nhưng không chặn luồng.'],
+  ['Lỗi chặn', 'Cần sửa file', 'Tách riêng để tải xuống và xử lý lại.'],
+  ['Thiếu cost', 'Theo SKU', 'Tạo danh sách hành động trước khi kết luận lợi nhuận.'],
 ]
 
 export function LandingPage() {
@@ -47,7 +47,7 @@ export function LandingPage() {
           <a href="#start">Bắt đầu</a>
         </nav>
         <Link className="landing-nav-cta" to="/dashboard">
-          Mở dashboard
+          Vào dashboard
         </Link>
       </header>
 
@@ -65,10 +65,8 @@ export function LandingPage() {
 
           <div className="landing-hero-copy">
             <img className="landing-wordmark" src="/brand/databreeze-wordmark-blue.png" alt="DataBreeze" />
-            <h1 id="landing-title">Lợi nhuận rõ ràng từ những file bán hàng lộn xộn.</h1>
-            <p>
-              DataBreeze giúp seller Việt đưa file marketplace vào một quy trình có kiểm tra, có cảnh báo và có dashboard lợi nhuận đủ tin để ra quyết định.
-            </p>
+            <h1 id="landing-title">Biến file bán hàng thành lợi nhuận rõ ràng.</h1>
+            <p>DataBreeze kiểm tra file marketplace, cảnh báo lỗi và dựng dashboard lợi nhuận đủ tin để ra quyết định.</p>
             <div className="landing-actions">
               <Link className="landing-button landing-button-primary" to="/dashboard">
                 Vào dashboard
@@ -136,12 +134,12 @@ export function LandingPage() {
         <section className="landing-proof" aria-label="DataBreeze proof points">
           <p>Không chỉ gom file vào một chỗ. DataBreeze cho seller biết số nào đáng tin, số nào cần sửa và việc nào nên làm tiếp theo.</p>
           <div>
-            <strong>86%</strong>
-            <span>độ sẵn sàng dữ liệu</span>
+            <strong>Có kiểm tra</strong>
+            <span>schema, ngày tháng, SKU và giá vốn</span>
           </div>
           <div>
             <strong>4 nguồn</strong>
-            <span>bán hàng, ads, chi phí, giá vốn</span>
+            <span>marketplace, ads, chi phí, giá vốn</span>
           </div>
         </section>
 
@@ -189,10 +187,10 @@ export function LandingPage() {
         <section id="start" className="landing-final">
           <div>
             <img src="/brand/databreeze-wordmark-blue.png" alt="DataBreeze" />
-            <h2>Mở thử workspace và xem luồng dữ liệu chạy thật.</h2>
+            <h2>Mở workspace và xem luồng dữ liệu chạy thật.</h2>
           </div>
           <Link className="landing-button landing-button-primary" to="/dashboard">
-            Mở sản phẩm
+            Vào dashboard
             <CaretRight size={17} weight="bold" />
           </Link>
         </section>

@@ -1,197 +1,193 @@
-import { CaretRight, CheckCircle, UploadSimple, WarningCircle } from '@phosphor-icons/react'
+import { ArrowRight, CheckCircle, FileArrowUp, Gauge, SealCheck, WarningCircle } from '@phosphor-icons/react'
 import { Link } from 'react-router-dom'
 
-const incomingFiles = [
-  ['Shopee', 'orders_thang_06.xlsx', '4.218 dòng'],
-  ['TikTok Shop', 'tiktok_doanh_thu.csv', '1.906 dòng'],
-  ['Ads', 'chi_phi_quang_cao.xlsx', '12 chiến dịch'],
+const boardRows = [
+  ['Shopee', 'orders_thang_06.xlsx', 'Sẵn sàng'],
+  ['TikTok Shop', 'doanh_thu.csv', 'Cần map cột'],
+  ['Ads', 'chi_phi.xlsx', 'Có cảnh báo'],
 ]
 
-const processSteps = ['Map cột', 'Kiểm tra lỗi', 'Bổ sung giá vốn']
-
-const workflowSteps = [
+const qualityCards = [
   {
-    title: 'Tải file thật',
-    body: 'Nhận file marketplace, quảng cáo và chi phí mà không bắt seller sửa mẫu trước.',
-    icon: UploadSimple,
+    title: 'File vào có kiểm tra',
+    body: 'DataBreeze đọc cấu trúc file, nhận diện cột thiếu và giữ lại lịch sử import.',
+    icon: FileArrowUp,
   },
   {
-    title: 'Nhìn rõ điểm thiếu',
-    body: 'Cột bắt buộc, ngày tháng, SKU thiếu cost và giá trị lạ được đưa ra trước khi import.',
+    title: 'Giá vốn không bị đoán',
+    body: 'SKU thiếu cost được tách riêng để seller bổ sung trước khi xem lợi nhuận.',
     icon: WarningCircle,
   },
   {
-    title: 'Chốt số đủ tin',
-    body: 'Doanh thu, phí, giá vốn và lợi nhuận chỉ cập nhật sau khi dữ liệu qua mapping và validation.',
-    icon: CheckCircle,
+    title: 'Dashboard có dấu vết',
+    body: 'Mỗi con số đều đi kèm trạng thái dữ liệu để biết nên tin, sửa hay chờ.',
+    icon: SealCheck,
   },
 ]
 
-const trustLanes = [
-  ['Hợp lệ', 'Dòng sẵn sàng', 'Đưa thẳng vào dashboard sau khi mapping.'],
-  ['Cảnh báo', 'Vẫn cho import', 'Giữ lại dấu hiệu cần xem nhưng không chặn luồng.'],
-  ['Lỗi chặn', 'Cần sửa file', 'Tách riêng để tải xuống và xử lý lại.'],
-  ['Thiếu cost', 'Theo SKU', 'Tạo danh sách hành động trước khi kết luận lợi nhuận.'],
+const workflow = [
+  ['Tải file', 'Nhận file marketplace, ads, chi phí và bảng giá vốn từ nhiều nguồn.'],
+  ['Map cột', 'Ghép cột trong file thật với trường dữ liệu DataBreeze cần để tính toán.'],
+  ['Kiểm tra', 'Chặn lỗi nghiêm trọng, ghi nhận cảnh báo và tạo danh sách SKU thiếu cost.'],
+  ['Ra quyết định', 'Cập nhật dashboard lợi nhuận khi dữ liệu đủ điều kiện để dùng.'],
+]
+
+const assurance = [
+  ['Dòng hợp lệ', 'Đi vào dashboard'],
+  ['Dòng cảnh báo', 'Cho xem trước khi chốt'],
+  ['Dòng lỗi', 'Tách ra để sửa'],
+  ['Thiếu giá vốn', 'Đưa về danh sách SKU'],
 ]
 
 export function LandingPage() {
   return (
-    <div className="landing-page">
-      <header className="landing-nav" aria-label="DataBreeze landing navigation">
-        <Link className="landing-brand" to="/" aria-label="DataBreeze landing">
+    <div className="db-landing">
+      <header className="db-nav" aria-label="DataBreeze landing navigation">
+        <Link className="db-brand" to="/" aria-label="DataBreeze landing">
           <img src="/brand/databreeze-wordmark-blue.png" alt="DataBreeze" />
         </Link>
         <nav>
+          <a href="#quality">Kiểm tra</a>
           <a href="#workflow">Quy trình</a>
-          <a href="#trust">Độ tin cậy</a>
           <a href="#start">Bắt đầu</a>
         </nav>
-        <Link className="landing-nav-cta" to="/dashboard">
+        <Link className="db-nav-action" to="/dashboard">
           Vào dashboard
         </Link>
       </header>
 
       <main>
-        <section className="landing-hero" aria-labelledby="landing-title">
-          <div className="landing-hero-backdrop" aria-hidden="true">
-            <img className="landing-bg-mark" src="/brand/databreeze-mark-dark.png" alt="" />
-            <span className="landing-bg-lane landing-bg-lane-one" />
-            <span className="landing-bg-lane landing-bg-lane-two" />
-            <span className="landing-bg-lane landing-bg-lane-three" />
-            <span className="landing-bg-token landing-bg-token-one">Shopee CSV</span>
-            <span className="landing-bg-token landing-bg-token-two">Thiếu giá vốn</span>
-            <span className="landing-bg-token landing-bg-token-three">Lợi nhuận sẵn sàng</span>
-          </div>
-
-          <div className="landing-hero-copy">
-            <img className="landing-wordmark" src="/brand/databreeze-wordmark-blue.png" alt="DataBreeze" />
-            <h1 id="landing-title">Biến file bán hàng thành lợi nhuận rõ ràng.</h1>
-            <p>DataBreeze kiểm tra file marketplace, cảnh báo lỗi và dựng dashboard lợi nhuận đủ tin để ra quyết định.</p>
-            <div className="landing-actions">
-              <Link className="landing-button landing-button-primary" to="/dashboard">
+        <section className="db-hero" aria-labelledby="db-title">
+          <div className="db-hero-copy">
+            <img className="db-hero-logo" src="/brand/databreeze-wordmark-blue.png" alt="DataBreeze" />
+            <h1 id="db-title">Lợi nhuận đáng tin.</h1>
+            <p>Tải file marketplace, kiểm tra lỗi, bổ sung giá vốn và xem dashboard trước khi ra quyết định.</p>
+            <div className="db-actions">
+              <Link className="db-button db-button-primary" to="/dashboard">
                 Vào dashboard
-                <CaretRight size={17} weight="bold" />
+                <ArrowRight size={18} weight="bold" />
               </Link>
-              <a className="landing-button landing-button-secondary" href="#workflow">
+              <a className="db-button db-button-secondary" href="#workflow">
                 Xem quy trình
               </a>
             </div>
           </div>
 
-          <div className="landing-flow-stage" aria-hidden="true">
-            <div className="landing-file-stack">
-              {incomingFiles.map(([source, name, rows]) => (
-                <div className="landing-file-chip" key={name}>
-                  <span>{source}</span>
-                  <strong>{name}</strong>
-                  <small>{rows}</small>
-                </div>
-              ))}
+          <div className="db-board" aria-label="DataBreeze product preview">
+            <div className="db-board-top">
+              <div>
+                <span>Workspace</span>
+                <strong>Seller Việt</strong>
+              </div>
+              <img src="/brand/databreeze-mark-dark.png" alt="" />
             </div>
 
-            <div className="landing-flow-core">
-              <div className="landing-core-head">
-                <img src="/brand/databreeze-mark-dark.png" alt="" />
-                <div>
-                  <span>DataBreeze import</span>
-                  <strong>Đang làm sạch dữ liệu</strong>
+            <div className="db-board-grid">
+              <section className="db-panel db-panel-files" aria-label="Nguồn file">
+                <div className="db-panel-head">
+                  <span>File mới</span>
+                  <strong>Đang kiểm tra</strong>
                 </div>
-              </div>
-              <div className="landing-core-line">
-                <span />
-              </div>
-              <div className="landing-core-steps">
-                {processSteps.map((step) => (
-                  <div key={step}>
+                <div className="db-file-list">
+                  {boardRows.map(([source, file, state]) => (
+                    <div className="db-file-row" key={file}>
+                      <span>{source}</span>
+                      <strong>{file}</strong>
+                      <em>{state}</em>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="db-panel db-panel-profit" aria-label="Lợi nhuận">
+                <div className="db-panel-head">
+                  <span>Lợi nhuận ròng</span>
+                  <strong>37,8M</strong>
+                </div>
+                <div className="db-bars" aria-hidden="true">
+                  <i />
+                  <i />
+                  <i />
+                  <i />
+                  <i />
+                </div>
+                <div className="db-warning">
+                  <WarningCircle size={17} weight="duotone" />
+                  <span>369 SKU thiếu giá vốn</span>
+                </div>
+              </section>
+
+              <section className="db-panel db-panel-checks" aria-label="Trạng thái dữ liệu">
+                {assurance.map(([label, body]) => (
+                  <div className="db-check-row" key={label}>
                     <CheckCircle size={17} weight="duotone" />
-                    <span>{step}</span>
+                    <span>{label}</span>
+                    <strong>{body}</strong>
                   </div>
                 ))}
-              </div>
-            </div>
-
-            <div className="landing-profit-board">
-              <div className="landing-profit-topline">
-                <span>Lợi nhuận ròng</span>
-                <strong>37,8M</strong>
-              </div>
-              <div className="landing-profit-chart">
-                <i />
-                <i />
-                <i />
-                <i />
-                <i />
-                <i />
-              </div>
-              <div className="landing-profit-alert">
-                <WarningCircle size={17} weight="duotone" />
-                <span>369 SKU cần bổ sung giá vốn</span>
-              </div>
+              </section>
             </div>
           </div>
         </section>
 
-        <section className="landing-proof" aria-label="DataBreeze proof points">
-          <p>Không chỉ gom file vào một chỗ. DataBreeze cho seller biết số nào đáng tin, số nào cần sửa và việc nào nên làm tiếp theo.</p>
-          <div>
-            <strong>Có kiểm tra</strong>
-            <span>schema, ngày tháng, SKU và giá vốn</span>
-          </div>
+        <section className="db-proof" aria-label="DataBreeze promise">
+          <p>Không làm đẹp dữ liệu bằng cách bỏ qua lỗi. DataBreeze cho seller thấy điều gì đã tin được và điều gì cần xử lý tiếp.</p>
           <div>
             <strong>4 nguồn</strong>
             <span>marketplace, ads, chi phí, giá vốn</span>
           </div>
+          <div>
+            <strong>1 luồng</strong>
+            <span>import, mapping, validation, dashboard</span>
+          </div>
         </section>
 
-        <section id="workflow" className="landing-section">
-          <div className="landing-section-copy">
-            <span>Quy trình vận hành</span>
-            <h2>Từ file thô đến quyết định có căn cứ.</h2>
-            <p>Mỗi bước giữ lại dấu vết dữ liệu: file nào đã vào, lỗi nào bị chặn và dashboard nào đã được cập nhật.</p>
+        <section id="quality" className="db-quality">
+          <div className="db-section-copy">
+            <span>Kiểm tra trước khi tính</span>
+            <h2>Số lợi nhuận chỉ hữu ích khi dữ liệu đủ sạch.</h2>
+            <p>DataBreeze giữ quy trình import rõ ràng để người bán không phải đoán file nào đúng, SKU nào thiếu và dashboard nào nên dùng.</p>
           </div>
-          <div className="landing-workflow">
-            {workflowSteps.map((step) => {
-              const Icon = step.icon
+          <div className="db-quality-grid">
+            {qualityCards.map((card) => {
+              const Icon = card.icon
               return (
-                <article className="landing-workflow-item" key={step.title}>
-                  <Icon size={24} weight="duotone" />
-                  <div>
-                    <strong>{step.title}</strong>
-                    <p>{step.body}</p>
-                  </div>
+                <article className="db-quality-card" key={card.title}>
+                  <Icon size={25} weight="duotone" />
+                  <h3>{card.title}</h3>
+                  <p>{card.body}</p>
                 </article>
               )
             })}
           </div>
         </section>
 
-        <section id="trust" className="landing-trust">
-          <div className="landing-trust-copy">
-            <span>Dữ liệu trước, quyết định sau</span>
-            <h2>Không giấu lỗi import dưới một con số đẹp.</h2>
-            <p>
-              Seller không cần biết ETL hay SQL. Họ cần biết file nào đã vào, dòng nào bị chặn, SKU nào thiếu cost và dashboard nào đủ tin để hành động.
-            </p>
+        <section id="workflow" className="db-workflow">
+          <div className="db-workflow-head">
+            <Gauge size={30} weight="duotone" />
+            <div>
+              <span>Luồng vận hành</span>
+              <h2>Từ file thô đến quyết định có căn cứ.</h2>
+            </div>
           </div>
-          <div className="landing-trust-lanes">
-            {trustLanes.map(([value, label, body]) => (
-              <div className="landing-trust-row" key={label}>
-                <strong>{value}</strong>
-                <span>{label}</span>
+          <div className="db-workflow-list">
+            {workflow.map(([title, body]) => (
+              <article className="db-workflow-item" key={title}>
+                <strong>{title}</strong>
                 <p>{body}</p>
-              </div>
+              </article>
             ))}
           </div>
         </section>
 
-        <section id="start" className="landing-final">
+        <section id="start" className="db-final">
           <div>
             <img src="/brand/databreeze-wordmark-blue.png" alt="DataBreeze" />
-            <h2>Mở workspace và xem luồng dữ liệu chạy thật.</h2>
+            <h2>Mở workspace và xem dữ liệu chạy qua quy trình thật.</h2>
           </div>
-          <Link className="landing-button landing-button-primary" to="/dashboard">
+          <Link className="db-button db-button-primary" to="/dashboard">
             Vào dashboard
-            <CaretRight size={17} weight="bold" />
+            <ArrowRight size={18} weight="bold" />
           </Link>
         </section>
       </main>

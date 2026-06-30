@@ -10,6 +10,8 @@
   --landing-paper: oklch(0.988 0.005 258);
   --landing-white: oklch(1.000 0.000 0);
   min-height: 100dvh;
+  width: 100%;
+  max-width: 100vw;
   overflow-x: hidden;
   background: var(--landing-paper);
   color: var(--landing-ink);
@@ -24,6 +26,9 @@
   align-items: center;
   gap: 24px;
   padding: 0 clamp(18px, 4vw, 54px);
+  width: 100%;
+  max-width: 100vw;
+  overflow: hidden;
   border-bottom: 1px solid color-mix(in oklch, var(--landing-line) 70%, transparent);
   background: color-mix(in oklch, var(--landing-white) 92%, transparent);
   backdrop-filter: blur(14px);
@@ -92,7 +97,7 @@
 
 .landing-hero {
   position: relative;
-  min-height: calc(100svh - 116px);
+  min-height: clamp(720px, calc(100svh - 68px), 980px);
   display: grid;
   grid-template-columns: minmax(320px, 0.82fr) minmax(540px, 1.18fr);
   align-items: center;
@@ -102,6 +107,7 @@
   background: var(--landing-deep-3);
   color: var(--landing-white);
   isolation: isolate;
+  max-width: 100vw;
 }
 
 .landing-hero::before {
@@ -774,7 +780,7 @@
 }
 
 .landing-trust-row span {
-  color: var(--landing-ink);
+  color: oklch(0.960 0.010 255);
   font-size: 14px;
   font-weight: 800;
 }
@@ -990,6 +996,7 @@
   }
 
   .landing-hero-copy {
+    order: 1;
     max-width: 100%;
   }
 
@@ -1012,15 +1019,20 @@
   }
 
   .landing-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
     margin-top: 18px;
   }
 
   .landing-actions .landing-button {
-    flex: 1 1 150px;
+    width: 100%;
   }
 
   .landing-flow-stage {
+    order: 2;
+    width: 100%;
+    max-width: 620px;
     min-height: 196px;
     grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
     gap: 10px;
@@ -1037,6 +1049,7 @@
 
   .landing-flow-core,
   .landing-profit-board {
+    min-width: 0;
     height: 188px;
     align-content: space-between;
     gap: 10px;
@@ -1084,7 +1097,7 @@
   }
 
   .landing-profit-topline strong {
-    font-size: 31px;
+    font-size: clamp(28px, 8vw, 34px);
   }
 
   .landing-profit-chart {
@@ -1162,37 +1175,68 @@
 
 @media (max-width: 520px) {
   .landing-nav {
+    grid-template-columns: minmax(0, 136px);
+    justify-content: space-between;
     gap: 12px;
+    display: grid;
   }
 
   .landing-brand {
-    width: 164px;
-    min-width: 164px;
+    justify-self: start;
+    width: 136px;
+    min-width: 136px;
   }
 
   .landing-nav-cta {
-    min-height: 36px;
-    padding: 0 11px;
+    display: none;
+  }
+
+  .landing-actions {
+    grid-template-columns: 1fr;
+    width: min(100%, 358px);
   }
 
   .landing-button {
     min-height: 42px;
-    width: auto;
+    width: 100%;
     padding: 0 13px;
     font-size: 13px;
   }
 
+  .landing-hero h1 {
+    max-width: 10.8ch;
+    font-size: clamp(34px, 10vw, 40px);
+  }
+
+  .landing-hero p {
+    max-width: 100%;
+  }
+
+  .landing-hero-copy {
+    width: min(100%, 358px);
+  }
+
   .landing-hero {
     padding-top: 22px;
+    width: 100%;
+    max-width: 100vw;
   }
 
   .landing-flow-stage {
-    min-height: 182px;
+    width: min(100%, 358px);
+    max-width: 358px;
+    min-height: 0;
+    grid-template-columns: 1fr;
+    overflow: hidden;
   }
 
   .landing-flow-core,
   .landing-profit-board {
-    height: 178px;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    min-height: 172px;
+    overflow: hidden;
   }
 
   .landing-profit-alert span {

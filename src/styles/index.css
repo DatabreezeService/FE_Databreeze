@@ -212,7 +212,6 @@ button:disabled {
   height: 100%;
   border-radius: inherit;
   background: var(--color-primary);
-  transition: width 180ms ease;
 }
 
 .app-main {

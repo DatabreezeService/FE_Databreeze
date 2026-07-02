@@ -1,202 +1,391 @@
-import { CaretRight, CheckCircle, UploadSimple, WarningCircle } from '@phosphor-icons/react'
+import type { ComponentType, CSSProperties } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import {
+  ArrowRight,
+  ChartLineUp,
+  CheckCircle,
+  ClipboardText,
+  FileArrowUp,
+  Gauge,
+  ListChecks,
+  ShieldCheck,
+  Storefront,
+  Tag,
+  WarningCircle,
+} from '@phosphor-icons/react'
+import { StatusBadge } from '../components/ui'
+import { initialMappingRows, initialMissingCosts, initialUploads, kpis, profitSeries, topSkus } from '../data/sampleData'
 
-const incomingFiles = [
-  ['Shopee', 'orders_thang_06.xlsx', '4.218 dòng'],
-  ['TikTok Shop', 'tiktok_doanh_thu.csv', '1.906 dòng'],
-  ['Ads', 'chi_phi_quang_cao.xlsx', '12 chiến dịch'],
-]
+type IconWeight = 'thin' | 'light' | 'regular' | 'bold' | 'fill' | 'duotone'
+type LandingIcon = ComponentType<{ size?: number; weight?: IconWeight; className?: string }>
+type WorkflowId = 'upload' | 'map' | 'validate' | 'decide'
 
-const processSteps = ['Map cột', 'Kiểm tra lỗi', 'Bổ sung giá vốn']
-
-const workflowSteps = [
+const workflowSteps: Array<{
+  id: WorkflowId
+  label: string
+  eyebrow: string
+  title: string
+  body: string
+  metric: string
+  icon: LandingIcon
+}> = [
   {
-    title: 'Tải file thật',
-    body: 'Nhận file Shopee, TikTok Shop, quảng cáo và chi phí mà không bắt seller sửa mẫu trước.',
-    icon: UploadSimple,
+    id: 'upload',
+    label: 'Upload',
+    eyebrow: 'Marketplace exports',
+    title: 'Bring every sales, ads, and expense file into one workspace.',
+    body: 'Shopee, TikTok Shop, ad spend, and operating expenses stay visible from the moment they enter the system.',
+    metric: '4.2k rows staged',
+    icon: FileArrowUp,
   },
   {
-    title: 'Thấy dữ liệu đang thiếu gì',
-    body: 'Cột bắt buộc, giá trị mẫu, lỗi ngày tháng và SKU thiếu cost đều được đưa ra trước khi import.',
-    icon: WarningCircle,
+    id: 'map',
+    label: 'Map',
+    eyebrow: 'Column confidence',
+    title: 'Turn messy column names into a reusable seller model.',
+    body: 'DataBreeze shows what matched, what needs review, and which fields affect profit before anything hits the dashboard.',
+    metric: '6 fields matched',
+    icon: ClipboardText,
   },
   {
-    title: 'Chốt dashboard đủ tin',
-    body: 'Doanh thu, phí, giá vốn và lợi nhuận được cập nhật khi dữ liệu đã qua mapping và validation.',
-    icon: CheckCircle,
+    id: 'validate',
+    label: 'Validate',
+    eyebrow: 'Import trust',
+    title: 'Catch missing costs, skipped rows, and broken files early.',
+    body: 'Validation is treated as part of the product experience, so decisions are made from known data quality instead of hope.',
+    metric: '86% quality score',
+    icon: ShieldCheck,
+  },
+  {
+    id: 'decide',
+    label: 'Decide',
+    eyebrow: 'Profit action',
+    title: 'Move from clean data to the next business decision.',
+    body: 'See true profit by SKU, shop, campaign, and date range, then resolve the exact issue that is holding the number back.',
+    metric: '3 actions surfaced',
+    icon: Gauge,
   },
 ]
 
-const trustLanes = [
-  ['3.842', 'dòng hợp lệ', 'Sẵn sàng cập nhật dashboard'],
-  ['312', 'cảnh báo', 'Cho phép import nhưng vẫn cần xem'],
-  ['64', 'dòng lỗi', 'Giữ lại để tải xuống và sửa'],
-  ['369', 'thiếu giá vốn', 'Tạo danh sách hành động theo SKU'],
+const proofPoints = [
+  {
+    title: 'Mapping stays explainable',
+    body: 'Every imported column has a target, confidence level, and example value before the dashboard changes.',
+    icon: ClipboardText,
+  },
+  {
+    title: 'Profit uses the boring details',
+    body: 'Costs, marketplace fees, ads, expenses, and missing inputs sit in the same operating loop.',
+    icon: Tag,
+  },
+  {
+    title: 'Built for repeat work',
+    body: 'A solo seller can start simple, while the structure leaves room for more shops, roles, and audit history.',
+    icon: Storefront,
+  },
+] satisfies Array<{ title: string; body: string; icon: LandingIcon }>
+
+const heroStats = [
+  { value: '86%', label: 'data quality before decisions' },
+  { value: '4', label: 'sources in the profit loop' },
+  { value: '3', label: 'fixes surfaced from imports' },
 ]
+
+const importSources = ['Shopee orders', 'TikTok Shop', 'Google Ads', 'Expense sheet']
 
 export function LandingPage() {
+  const [activeStepId, setActiveStepId] = useState<WorkflowId>('upload')
+  const activeStep = workflowSteps.find((step) => step.id === activeStepId) ?? workflowSteps[0]
+  const ActiveIcon = activeStep.icon
+
   return (
     <div className="landing-page">
-      <header className="landing-nav" aria-label="DataBreeze landing navigation">
-        <Link className="landing-brand" to="/" aria-label="DataBreeze landing">
-          <img src="/brand/databreeze-wordmark-blue.png" alt="DataBreeze" />
-        </Link>
-        <nav>
-          <a href="#workflow">Quy trình</a>
-          <a href="#trust">Độ tin cậy</a>
-          <a href="#start">Bắt đầu</a>
+      <header className="landing-hero" id="top">
+        <nav className="landing-nav" aria-label="Landing navigation">
+          <a className="landing-brand" href="#top" aria-label="DataBreeze home">
+            <img src="/brand/databreeze-mark-dark.png" alt="" />
+            <span>DataBreeze</span>
+          </a>
+          <div className="landing-nav-links">
+            <a href="#workflow">Workflow</a>
+            <a href="#product">Product</a>
+            <a href="#proof">Proof</a>
+          </div>
+          <Link className="landing-nav-cta" to="/dashboard">
+            Open app
+            <ArrowRight size={15} weight="bold" />
+          </Link>
         </nav>
-        <Link className="landing-nav-cta" to="/dashboard">
-          Mở dashboard
-        </Link>
+
+        <HeroDataVisual />
+
+        <div className="landing-hero-content">
+          <p className="landing-eyebrow">Vietnamese-first profit workspace</p>
+          <h1>DataBreeze</h1>
+          <p className="landing-hero-line">Messy files. Trusted profit.</p>
+          <p className="landing-hero-copy">
+            Upload marketplace exports, map the weird columns, validate every row, and see true profit by SKU, shop,
+            campaign, and date without building another spreadsheet around the spreadsheet.
+          </p>
+          <div className="landing-hero-actions">
+            <Link className="landing-button landing-button-primary" to="/dashboard">
+              Open dashboard
+              <ArrowRight size={17} weight="bold" />
+            </Link>
+            <a className="landing-button landing-button-secondary" href="#workflow">
+              See workflow
+            </a>
+          </div>
+        </div>
+
+        <div className="landing-hero-strip" aria-label="DataBreeze highlights">
+          {heroStats.map((stat) => (
+            <div key={stat.label}>
+              <strong>{stat.value}</strong>
+              <span>{stat.label}</span>
+            </div>
+          ))}
+        </div>
       </header>
 
       <main>
-        <section className="landing-hero" aria-labelledby="landing-title">
-          <div className="landing-hero-backdrop" aria-hidden="true">
-            <img className="landing-bg-mark" src="/brand/databreeze-mark-dark.png" alt="" />
-            <span className="landing-bg-lane landing-bg-lane-one" />
-            <span className="landing-bg-lane landing-bg-lane-two" />
-            <span className="landing-bg-lane landing-bg-lane-three" />
-            <span className="landing-bg-token landing-bg-token-one">Shopee CSV</span>
-            <span className="landing-bg-token landing-bg-token-two">Thiếu giá vốn</span>
-            <span className="landing-bg-token landing-bg-token-three">Lợi nhuận sẵn sàng</span>
-          </div>
-
-          <div className="landing-hero-copy">
-            <img className="landing-wordmark" src="/brand/databreeze-wordmark-blue.png" alt="DataBreeze" />
-            <h1 id="landing-title">Lợi nhuận rõ ràng từ những file bán hàng lộn xộn.</h1>
+        <section className="landing-process" id="workflow" aria-labelledby="workflow-title">
+          <div className="landing-section-heading">
+            <p className="landing-eyebrow">Workflow</p>
+            <h2 id="workflow-title">A clear path from raw files to business action.</h2>
             <p>
-              DataBreeze giúp seller Việt đưa file marketplace vào một quy trình có kiểm tra, có cảnh báo và có dashboard lợi nhuận đủ tin để ra quyết định.
+              DataBreeze keeps every step visible: imports, practical mapping, validation before confidence, and
+              dashboard numbers that point to the next fix.
             </p>
-            <div className="landing-actions">
-              <Link className="landing-button landing-button-primary" to="/dashboard">
-                Vào dashboard
-                <CaretRight size={17} weight="bold" />
-              </Link>
-              <a className="landing-button landing-button-secondary" href="#workflow">
-                Xem quy trình
-              </a>
-            </div>
           </div>
 
-          <div className="landing-flow-stage" aria-hidden="true">
-            <div className="landing-file-stack">
-              {incomingFiles.map(([source, name, rows]) => (
-                <div className="landing-file-chip" key={name}>
-                  <span>{source}</span>
-                  <strong>{name}</strong>
-                  <small>{rows}</small>
-                </div>
-              ))}
+          <div className="workflow-layout">
+            <div className="workflow-rail" role="tablist" aria-label="DataBreeze workflow">
+              {workflowSteps.map((step, index) => {
+                const StepIcon = step.icon
+                const isActive = step.id === activeStepId
+                return (
+                  <button
+                    className={`workflow-step ${isActive ? 'workflow-step-active' : ''}`}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    aria-controls="workflow-detail"
+                    key={step.id}
+                    onClick={() => setActiveStepId(step.id)}
+                  >
+                    <span>{String(index + 1).padStart(2, '0')}</span>
+                    <StepIcon size={20} weight="duotone" />
+                    <strong>{step.label}</strong>
+                  </button>
+                )
+              })}
             </div>
 
-            <div className="landing-flow-core">
-              <div className="landing-core-head">
-                <img src="/brand/databreeze-mark-dark.png" alt="" />
-                <div>
-                  <span>DataBreeze import</span>
-                  <strong>Đang làm sạch dữ liệu</strong>
-                </div>
+            <article className="workflow-detail" id="workflow-detail" aria-live="polite">
+              <div className="workflow-detail-icon">
+                <ActiveIcon size={28} weight="duotone" />
               </div>
-              <div className="landing-core-line">
-                <span />
-              </div>
-              <div className="landing-core-steps">
-                {processSteps.map((step) => (
-                  <div key={step}>
-                    <CheckCircle size={17} weight="duotone" />
-                    <span>{step}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="landing-profit-board">
-              <div className="landing-profit-topline">
-                <span>Lợi nhuận ròng</span>
-                <strong>37,8M</strong>
-              </div>
-              <div className="landing-profit-chart">
-                <i />
-                <i />
-                <i />
-                <i />
-                <i />
-                <i />
-              </div>
-              <div className="landing-profit-alert">
-                <WarningCircle size={17} weight="duotone" />
-                <span>369 SKU cần bổ sung giá vốn</span>
-              </div>
-            </div>
+              <p>{activeStep.eyebrow}</p>
+              <h3>{activeStep.title}</h3>
+              <span>{activeStep.body}</span>
+              <strong>{activeStep.metric}</strong>
+            </article>
           </div>
         </section>
 
-        <section className="landing-proof" aria-label="DataBreeze proof points">
-          <p>Không chỉ gom file vào một chỗ. DataBreeze cho seller biết số nào đáng tin, số nào cần sửa và việc nào nên làm tiếp theo.</p>
-          <div>
-            <strong>86%</strong>
-            <span>độ sẵn sàng dữ liệu</span>
+        <section className="landing-product" id="product" aria-labelledby="product-title">
+          <div className="landing-section-heading">
+            <p className="landing-eyebrow">Product surface</p>
+            <h2 id="product-title">Profit clarity from the same surface sellers use every week.</h2>
+            <p>
+              Uploads, mapping, validation, costs, and profit review stay connected, so the public promise matches the
+              working product.
+            </p>
           </div>
-          <div>
-            <strong>4 nguồn</strong>
-            <span>bán hàng, ads, chi phí, giá vốn</span>
-          </div>
+          <ProductProof />
         </section>
 
-        <section id="workflow" className="landing-section">
-          <div className="landing-section-copy">
-            <span>Quy trình vận hành</span>
-            <h2>Từ file thô đến quyết định có căn cứ.</h2>
-            <p>Mỗi bước giữ lại dấu vết dữ liệu: file nào đã vào, lỗi nào bị chặn và dashboard nào đã được cập nhật.</p>
+        <section className="landing-proof" id="proof" aria-labelledby="proof-title">
+          <div className="landing-section-heading">
+            <p className="landing-eyebrow">Why it feels trustworthy</p>
+            <h2 id="proof-title">Built around the moments where sellers usually lose confidence.</h2>
           </div>
-          <div className="landing-workflow">
-            {workflowSteps.map((step) => {
-              const Icon = step.icon
+          <div className="proof-list">
+            {proofPoints.map((point) => {
+              const PointIcon = point.icon
               return (
-                <article className="landing-workflow-item" key={step.title}>
-                  <Icon size={24} weight="duotone" />
+                <article className="proof-item" key={point.title}>
+                  <PointIcon size={24} weight="duotone" />
                   <div>
-                    <strong>{step.title}</strong>
-                    <p>{step.body}</p>
+                    <h3>{point.title}</h3>
+                    <p>{point.body}</p>
                   </div>
                 </article>
               )
             })}
           </div>
         </section>
+      </main>
 
-        <section id="trust" className="landing-trust">
-          <div className="landing-trust-copy">
-            <span>Dữ liệu trước, quyết định sau</span>
-            <h2>Không giấu lỗi import dưới một con số đẹp.</h2>
-            <p>
-              Seller không cần biết ETL hay SQL. Họ cần biết file nào đã vào, dòng nào bị chặn, SKU nào thiếu cost và dashboard nào đủ tin để hành động.
-            </p>
+      <footer className="landing-final">
+        <img src="/brand/databreeze-mark-dark.png" alt="" />
+        <div>
+          <p className="landing-eyebrow">Ready for the working surface</p>
+          <h2>Turn the next export into a profit decision.</h2>
+        </div>
+        <Link className="landing-button landing-button-primary" to="/dashboard">
+          Open dashboard
+          <ArrowRight size={17} weight="bold" />
+        </Link>
+      </footer>
+    </div>
+  )
+}
+
+function HeroDataVisual() {
+  return (
+    <div className="hero-data-visual" aria-hidden="true">
+      <div className="hero-file-stack">
+        {importSources.map((source, index) => (
+          <span style={{ '--delay': `${index * 120}ms` } as CSSProperties} key={source}>
+            {source}
+          </span>
+        ))}
+      </div>
+
+      <div className="hero-flow-line">
+        <i />
+        <i />
+        <i />
+      </div>
+
+      <div className="hero-dashboard-slice">
+        <div className="hero-slice-header">
+          <span>Profit workspace</span>
+          <StatusBadge tone="good">validated</StatusBadge>
+        </div>
+        <div className="hero-slice-metrics">
+          {kpis.slice(0, 3).map((kpi) => (
+            <div key={kpi.label}>
+              <span>{kpi.label}</span>
+              <strong>{kpi.value}</strong>
+            </div>
+          ))}
+        </div>
+        <MiniProfitChart />
+      </div>
+    </div>
+  )
+}
+
+function ProductProof() {
+  const latestUpload = initialUploads[0]
+  const missingCost = initialMissingCosts[0]
+  const highProfitSku = topSkus[0]
+
+  return (
+    <div className="product-proof-shell">
+      <div className="product-proof-topline">
+        <div>
+          <span>Product workflow</span>
+          <strong>Dashboard after a clean import</strong>
+        </div>
+        <StatusBadge tone="info">sample workspace</StatusBadge>
+      </div>
+
+      <div className="product-proof-grid">
+        <section className="proof-dashboard-pane">
+          <div className="proof-pane-heading">
+            <div>
+              <span>Total profit</span>
+              <strong>{kpis[2].value}</strong>
+            </div>
+            <StatusBadge tone="good">{kpis[2].delta}</StatusBadge>
           </div>
-          <div className="landing-trust-lanes">
-            {trustLanes.map(([value, label, body]) => (
-              <div className="landing-trust-row" key={label}>
-                <strong>{value}</strong>
-                <span>{label}</span>
-                <p>{body}</p>
+          <MiniProfitChart />
+          <div className="proof-sku-row">
+            <div>
+              <span>Top SKU</span>
+              <strong>{highProfitSku.sku}</strong>
+            </div>
+            <div>
+              <span>Margin</span>
+              <strong>{highProfitSku.margin}</strong>
+            </div>
+            <div>
+              <span>Profit</span>
+              <strong>{highProfitSku.profit}</strong>
+            </div>
+          </div>
+        </section>
+
+        <section className="proof-import-pane">
+          <div className="proof-pane-heading compact">
+            <FileArrowUp size={22} weight="duotone" />
+            <div>
+              <span>Latest import</span>
+              <strong>{latestUpload.file}</strong>
+            </div>
+          </div>
+          <div className="proof-import-meta">
+            <span>{latestUpload.source}</span>
+            <span>{latestUpload.rows} rows</span>
+            <StatusBadge tone="warn">mapping</StatusBadge>
+          </div>
+          <div className="mapping-preview-list">
+            {initialMappingRows.slice(0, 4).map((row) => (
+              <div className="mapping-preview-row" key={row.source}>
+                <span>{row.source || 'Empty field'}</span>
+                <strong>{row.target}</strong>
               </div>
             ))}
           </div>
         </section>
 
-        <section id="start" className="landing-final">
+        <section className="proof-action-pane">
+          <WarningCircle size={24} weight="duotone" />
           <div>
-            <img src="/brand/databreeze-wordmark-blue.png" alt="DataBreeze" />
-            <h2>Mở thử workspace và xem luồng dữ liệu chạy thật.</h2>
+            <span>Next fix</span>
+            <strong>{missingCost.sku}</strong>
+            <p>{missingCost.orders} orders need unit cost before net profit is trusted.</p>
           </div>
-          <Link className="landing-button landing-button-primary" to="/dashboard">
-            Mở sản phẩm
-            <CaretRight size={17} weight="bold" />
+          <Link to="/costs">
+            Resolve costs
+            <ArrowRight size={15} weight="bold" />
           </Link>
         </section>
-      </main>
+      </div>
     </div>
+  )
+}
+
+function MiniProfitChart() {
+  const points = useMemo(() => {
+    const max = Math.max(...profitSeries)
+    const min = Math.min(...profitSeries)
+    const range = Math.max(max - min, 1)
+
+    return profitSeries
+      .map((value, index) => {
+        const x = 10 + (index / (profitSeries.length - 1)) * 340
+        const y = 102 - ((value - min) / range) * 78
+        return `${x},${y}`
+      })
+      .join(' ')
+  }, [])
+
+  return (
+    <svg className="mini-profit-chart" viewBox="0 0 360 120" role="img" aria-label="Profit trend moving upward">
+      <polyline className="mini-grid" points="10,96 350,96" />
+      <polyline className="mini-grid" points="10,62 350,62" />
+      <polyline className="mini-grid" points="10,28 350,28" />
+      <polyline className="mini-line" points={points} />
+      {points.split(' ').map((point, index) => {
+        const [cx, cy] = point.split(',')
+        return <circle className="mini-dot" cx={cx} cy={cy} r={index === profitSeries.length - 1 ? 4.2 : 2.4} key={point} />
+      })}
+    </svg>
   )
 }

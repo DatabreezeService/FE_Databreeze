@@ -111,6 +111,12 @@ Core components:
 
 Every interactive component needs default, hover, focus-visible, active, disabled, loading, and error states where applicable.
 
+## Brand And Partner Marks
+
+When a logo or partner mark already contains a readable name, treat the mark as the label. Do not repeat the same or nearly same text beside it. For example, show the `.NET` logo by itself instead of placing `.NET` text next to a `.NET` wordmark.
+
+Only add adjacent text when the mark is abstract, ambiguous at small sizes, or when accessibility requires a visible clarification. Always keep descriptive `alt` text for images even when the visible label is omitted.
+
 ## Data Visualization
 
 Charts should be quiet and readable:

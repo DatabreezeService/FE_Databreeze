@@ -262,6 +262,10 @@ Data errors should explain what to fix and how to continue.
 
 The user should always know which workspace and store they are viewing.
 
+### Logo Labels
+
+If a logo already includes a readable name, use the logo alone and do not repeat the same or nearly same name next to it. Example: a `.NET` wordmark should not also have `.NET` as adjacent visible text. Add visible text only when the mark is abstract, unclear at small sizes, or needs clarification in context.
+
 ### Solo-First, Team-Ready
 
 The first UI should feel simple for one seller. Do not design in a way that blocks later organization workspaces, roles, and billing.

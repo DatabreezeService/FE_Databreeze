@@ -1,5 +1,4 @@
-import type { ComponentType, CSSProperties } from 'react'
-import { useMemo, useState } from 'react'
+import type { ComponentType } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowRight,
@@ -10,107 +9,96 @@ import {
   Gauge,
   ListChecks,
   ShieldCheck,
-  Storefront,
-  Tag,
-  WarningCircle,
 } from '@phosphor-icons/react'
-import { StatusBadge } from '../components/ui'
 import { initialMappingRows, initialMissingCosts, initialUploads, kpis, profitSeries, topSkus } from '../data/sampleData'
 
 type IconWeight = 'thin' | 'light' | 'regular' | 'bold' | 'fill' | 'duotone'
 type LandingIcon = ComponentType<{ size?: number; weight?: IconWeight; className?: string }>
-type WorkflowId = 'upload' | 'map' | 'validate' | 'decide'
 
-const workflowSteps: Array<{
-  id: WorkflowId
-  label: string
-  eyebrow: string
-  title: string
-  body: string
-  metric: string
-  icon: LandingIcon
-}> = [
+const sources = ['Shopee', 'TikTok Shop', 'Google Ads', 'Costs']
+
+const principles: Array<{ title: string; body: string; icon: LandingIcon }> = [
   {
-    id: 'upload',
-    label: 'Upload',
-    eyebrow: 'Marketplace exports',
-    title: 'Bring every sales, ads, and expense file into one workspace.',
-    body: 'Shopee, TikTok Shop, ad spend, and operating expenses stay visible from the moment they enter the system.',
-    metric: '4.2k rows staged',
+    title: 'Imports stay honest',
+    body: 'Sales, ads, fees, and expenses land with visible row counts, source names, and review states before they affect profit.',
     icon: FileArrowUp,
   },
   {
-    id: 'map',
-    label: 'Map',
-    eyebrow: 'Column confidence',
-    title: 'Turn messy column names into a reusable seller model.',
-    body: 'DataBreeze shows what matched, what needs review, and which fields affect profit before anything hits the dashboard.',
-    metric: '6 fields matched',
+    title: 'Mapping has receipts',
+    body: 'Every column keeps its original label, a target field, and confidence, so cleanup is visible instead of magical.',
     icon: ClipboardText,
   },
   {
-    id: 'validate',
-    label: 'Validate',
-    eyebrow: 'Import trust',
-    title: 'Catch missing costs, skipped rows, and broken files early.',
-    body: 'Validation is treated as part of the product experience, so decisions are made from known data quality instead of hope.',
-    metric: '86% quality score',
-    icon: ShieldCheck,
-  },
-  {
-    id: 'decide',
-    label: 'Decide',
-    eyebrow: 'Profit action',
-    title: 'Move from clean data to the next business decision.',
-    body: 'See true profit by SKU, shop, campaign, and date range, then resolve the exact issue that is holding the number back.',
-    metric: '3 actions surfaced',
+    title: 'Profit points to work',
+    body: 'The dashboard ends with the exact SKU, cost gap, or margin issue that needs the next decision.',
     icon: Gauge,
   },
 ]
 
-const proofPoints = [
+const workflow = [
   {
-    title: 'Mapping stays explainable',
-    body: 'Every imported column has a target, confidence level, and example value before the dashboard changes.',
+    label: 'Upload',
+    title: 'Bring the week in',
+    body: 'Marketplace exports, ad spend, and expense sheets are staged together with source context intact.',
+    icon: FileArrowUp,
+  },
+  {
+    label: 'Map',
+    title: 'Translate the messy columns',
+    body: 'DataBreeze turns seller-specific field names into a reusable model without hiding what changed.',
     icon: ClipboardText,
   },
   {
-    title: 'Profit uses the boring details',
-    body: 'Costs, marketplace fees, ads, expenses, and missing inputs sit in the same operating loop.',
-    icon: Tag,
+    label: 'Validate',
+    title: 'Find the gaps before the chart',
+    body: 'Missing SKU, cost, date, and fee problems are flagged while the file is still fixable.',
+    icon: ShieldCheck,
   },
   {
-    title: 'Built for repeat work',
-    body: 'A solo seller can start simple, while the structure leaves room for more shops, roles, and audit history.',
-    icon: Storefront,
+    label: 'Decide',
+    title: 'Move from number to action',
+    body: 'Profit is shown by SKU, shop, campaign, and date range with the next fix close by.',
+    icon: ChartLineUp,
   },
-] satisfies Array<{ title: string; body: string; icon: LandingIcon }>
+] satisfies Array<{ label: string; title: string; body: string; icon: LandingIcon }>
 
-const heroStats = [
-  { value: '86%', label: 'data quality before decisions' },
-  { value: '4', label: 'sources in the profit loop' },
-  { value: '3', label: 'fixes surfaced from imports' },
+const productMoments = [
+  {
+    title: 'Latest file',
+    value: 'Shopee orders',
+    detail: `${initialUploads[0].file} - ${initialUploads[0].rows} rows waiting for mapping`,
+    tone: 'blue',
+  },
+  {
+    title: 'Missing cost',
+    value: initialMissingCosts[0].sku,
+    detail: `${initialMissingCosts[0].orders} orders blocked from trusted net profit`,
+    tone: 'amber',
+  },
+  {
+    title: 'Top SKU',
+    value: topSkus[0].sku,
+    detail: `${topSkus[0].profit} profit at ${topSkus[0].margin} margin`,
+    tone: 'teal',
+  },
 ]
 
-const importSources = ['Shopee orders', 'TikTok Shop', 'Google Ads', 'Expense sheet']
-
 export function LandingPage() {
-  const [activeStepId, setActiveStepId] = useState<WorkflowId>('upload')
-  const activeStep = workflowSteps.find((step) => step.id === activeStepId) ?? workflowSteps[0]
-  const ActiveIcon = activeStep.icon
-
   return (
     <div className="landing-page">
       <header className="landing-hero" id="top">
+        <img className="landing-hero-art" src="/landing/hero-desk.png" alt="" />
+        <div className="landing-hero-shade" />
+
         <nav className="landing-nav" aria-label="Landing navigation">
           <a className="landing-brand" href="#top" aria-label="DataBreeze home">
             <img src="/brand/databreeze-mark-dark.png" alt="" />
             <span>DataBreeze</span>
           </a>
           <div className="landing-nav-links">
-            <a href="#workflow">Workflow</a>
+            <a href="#workflow">Flow</a>
             <a href="#product">Product</a>
-            <a href="#proof">Proof</a>
+            <a href="#decision">Decision</a>
           </div>
           <Link className="landing-nav-cta" to="/dashboard">
             Open app
@@ -118,273 +106,202 @@ export function LandingPage() {
           </Link>
         </nav>
 
-        <HeroDataVisual />
-
         <div className="landing-hero-content">
-          <p className="landing-eyebrow">Vietnamese-first profit workspace</p>
+          <div className="landing-hero-mark">
+            <img src="/brand/databreeze-mark-dark.png" alt="" />
+          </div>
           <h1>DataBreeze</h1>
-          <p className="landing-hero-line">Messy files. Trusted profit.</p>
+          <p className="landing-hero-line">Messy files. Real profit decisions.</p>
           <p className="landing-hero-copy">
-            Upload marketplace exports, map the weird columns, validate every row, and see true profit by SKU, shop,
-            campaign, and date without building another spreadsheet around the spreadsheet.
+            A profit workspace for sellers who need marketplace exports, ad spend, costs, and SKU decisions to line up
+            before the next campaign burns budget.
           </p>
           <div className="landing-hero-actions">
             <Link className="landing-button landing-button-primary" to="/dashboard">
               Open dashboard
               <ArrowRight size={17} weight="bold" />
             </Link>
-            <a className="landing-button landing-button-secondary" href="#workflow">
-              See workflow
+            <a className="landing-button landing-button-ghost" href="#workflow">
+              See the flow
             </a>
           </div>
         </div>
 
-        <div className="landing-hero-strip" aria-label="DataBreeze highlights">
-          {heroStats.map((stat) => (
-            <div key={stat.label}>
-              <strong>{stat.value}</strong>
-              <span>{stat.label}</span>
-            </div>
+        <div className="landing-hero-sources" aria-label="Connected commerce sources">
+          {sources.map((source) => (
+            <span key={source}>{source}</span>
           ))}
         </div>
       </header>
 
       <main>
-        <section className="landing-process" id="workflow" aria-labelledby="workflow-title">
-          <div className="landing-section-heading">
-            <p className="landing-eyebrow">Workflow</p>
-            <h2 id="workflow-title">A clear path from raw files to business action.</h2>
+        <section className="landing-belief" aria-labelledby="belief-title">
+          <div className="landing-section-kicker">Built from the product inward</div>
+          <div className="landing-belief-grid">
+            <h2 id="belief-title">The landing page should feel like the relief of finally trusting the spreadsheet.</h2>
             <p>
-              DataBreeze keeps every step visible: imports, practical mapping, validation before confidence, and
-              dashboard numbers that point to the next fix.
+              The product is not promising a magic dashboard. It is promising a clean operating path from raw commerce
+              files to the next profitable move.
             </p>
           </div>
-
-          <div className="workflow-layout">
-            <div className="workflow-rail" role="tablist" aria-label="DataBreeze workflow">
-              {workflowSteps.map((step, index) => {
-                const StepIcon = step.icon
-                const isActive = step.id === activeStepId
-                return (
-                  <button
-                    className={`workflow-step ${isActive ? 'workflow-step-active' : ''}`}
-                    type="button"
-                    role="tab"
-                    aria-selected={isActive}
-                    aria-controls="workflow-detail"
-                    key={step.id}
-                    onClick={() => setActiveStepId(step.id)}
-                  >
-                    <span>{String(index + 1).padStart(2, '0')}</span>
-                    <StepIcon size={20} weight="duotone" />
-                    <strong>{step.label}</strong>
-                  </button>
-                )
-              })}
-            </div>
-
-            <article className="workflow-detail" id="workflow-detail" aria-live="polite">
-              <div className="workflow-detail-icon">
-                <ActiveIcon size={28} weight="duotone" />
-              </div>
-              <p>{activeStep.eyebrow}</p>
-              <h3>{activeStep.title}</h3>
-              <span>{activeStep.body}</span>
-              <strong>{activeStep.metric}</strong>
-            </article>
-          </div>
-        </section>
-
-        <section className="landing-product" id="product" aria-labelledby="product-title">
-          <div className="landing-section-heading">
-            <p className="landing-eyebrow">Product surface</p>
-            <h2 id="product-title">Profit clarity from the same surface sellers use every week.</h2>
-            <p>
-              Uploads, mapping, validation, costs, and profit review stay connected, so the public promise matches the
-              working product.
-            </p>
-          </div>
-          <ProductProof />
-        </section>
-
-        <section className="landing-proof" id="proof" aria-labelledby="proof-title">
-          <div className="landing-section-heading">
-            <p className="landing-eyebrow">Why it feels trustworthy</p>
-            <h2 id="proof-title">Built around the moments where sellers usually lose confidence.</h2>
-          </div>
-          <div className="proof-list">
-            {proofPoints.map((point) => {
-              const PointIcon = point.icon
+          <div className="landing-principles">
+            {principles.map((item) => {
+              const Icon = item.icon
               return (
-                <article className="proof-item" key={point.title}>
-                  <PointIcon size={24} weight="duotone" />
-                  <div>
-                    <h3>{point.title}</h3>
-                    <p>{point.body}</p>
-                  </div>
+                <article className="landing-principle" key={item.title}>
+                  <Icon size={24} weight="duotone" />
+                  <h3>{item.title}</h3>
+                  <p>{item.body}</p>
                 </article>
               )
             })}
           </div>
         </section>
+
+        <section className="landing-workflow" id="workflow" aria-labelledby="workflow-title">
+          <div className="landing-workflow-media">
+            <img src="/landing/workflow-strip.png" alt="" />
+          </div>
+          <div className="landing-workflow-copy">
+            <div className="landing-section-kicker">Four moves, one system</div>
+            <h2 id="workflow-title">Raw exports become a decision trail.</h2>
+            <div className="landing-workflow-list">
+              {workflow.map((step, index) => {
+                const Icon = step.icon
+                return (
+                  <article className="landing-flow-step" key={step.label}>
+                    <span>{String(index + 1).padStart(2, '0')}</span>
+                    <Icon size={24} weight="duotone" />
+                    <div>
+                      <strong>{step.label}</strong>
+                      <h3>{step.title}</h3>
+                      <p>{step.body}</p>
+                    </div>
+                  </article>
+                )
+              })}
+            </div>
+          </div>
+        </section>
+
+        <section className="landing-product" id="product" aria-labelledby="product-title">
+          <div className="landing-product-heading">
+            <div>
+              <div className="landing-section-kicker">Product proof</div>
+              <h2 id="product-title">The surface sellers return to after every export.</h2>
+            </div>
+            <p>
+              The page borrows from the working app: file status, mapping confidence, missing costs, and SKU profit all
+              stay in one operational story.
+            </p>
+          </div>
+
+          <div className="landing-product-stage">
+            <section className="landing-profit-board" aria-label="Profit dashboard preview">
+              <div className="landing-board-top">
+                <div>
+                  <span>Maison Commerce</span>
+                  <strong>{kpis[2].value}</strong>
+                  <small>net profit this period</small>
+                </div>
+                <CheckCircle size={28} weight="duotone" />
+              </div>
+              <ProfitSparkline />
+              <div className="landing-board-table">
+                {topSkus.slice(0, 3).map((sku) => (
+                  <div key={sku.sku}>
+                    <span>{sku.sku}</span>
+                    <strong>{sku.profit}</strong>
+                    <small>{sku.margin}</small>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="landing-map-board" aria-label="Mapping preview">
+              <div className="landing-map-header">
+                <ListChecks size={24} weight="duotone" />
+                <div>
+                  <span>Column mapping</span>
+                  <strong>{initialUploads[0].file}</strong>
+                </div>
+              </div>
+              <div className="landing-map-rows">
+                {initialMappingRows.slice(0, 5).map((row) => (
+                  <div key={row.source}>
+                    <span>{row.source}</span>
+                    <strong>{row.target}</strong>
+                    <small>{row.confidence}</small>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <aside className="landing-action-stack" aria-label="Product moments">
+              {productMoments.map((moment) => (
+                <div className={`landing-action-note tone-${moment.tone}`} key={moment.title}>
+                  <span>{moment.title}</span>
+                  <strong>{moment.value}</strong>
+                  <p>{moment.detail}</p>
+                </div>
+              ))}
+            </aside>
+          </div>
+        </section>
+
+        <section className="landing-decision" id="decision" aria-labelledby="decision-title">
+          <img src="/landing/decision-scene.png" alt="" />
+          <div className="landing-decision-copy">
+            <div className="landing-section-kicker">Decision ready</div>
+            <h2 id="decision-title">The best dashboard is the one that tells you what to fix next.</h2>
+            <p>
+              DataBreeze keeps the accounting details, marketplace mess, and SKU decisions close enough that profit can
+              become a weekly habit.
+            </p>
+            <Link className="landing-button landing-button-primary" to="/dashboard">
+              Open dashboard
+              <ArrowRight size={17} weight="bold" />
+            </Link>
+          </div>
+        </section>
       </main>
 
-      <footer className="landing-final">
-        <img src="/brand/databreeze-mark-dark.png" alt="" />
-        <div>
-          <p className="landing-eyebrow">Ready for the working surface</p>
-          <h2>Turn the next export into a profit decision.</h2>
+      <footer className="landing-footer">
+        <a className="landing-brand" href="#top" aria-label="DataBreeze home">
+          <img src="/brand/databreeze-mark-dark.png" alt="" />
+          <span>DataBreeze</span>
+        </a>
+        <div className="landing-footer-links">
+          <a href="#workflow">Flow</a>
+          <a href="#product">Product</a>
+          <Link to="/dashboard">Open app</Link>
         </div>
-        <Link className="landing-button landing-button-primary" to="/dashboard">
-          Open dashboard
-          <ArrowRight size={17} weight="bold" />
-        </Link>
       </footer>
     </div>
   )
 }
 
-function HeroDataVisual() {
-  return (
-    <div className="hero-data-visual" aria-hidden="true">
-      <div className="hero-file-stack">
-        {importSources.map((source, index) => (
-          <span style={{ '--delay': `${index * 120}ms` } as CSSProperties} key={source}>
-            {source}
-          </span>
-        ))}
-      </div>
-
-      <div className="hero-flow-line">
-        <i />
-        <i />
-        <i />
-      </div>
-
-      <div className="hero-dashboard-slice">
-        <div className="hero-slice-header">
-          <span>Profit workspace</span>
-          <StatusBadge tone="good">validated</StatusBadge>
-        </div>
-        <div className="hero-slice-metrics">
-          {kpis.slice(0, 3).map((kpi) => (
-            <div key={kpi.label}>
-              <span>{kpi.label}</span>
-              <strong>{kpi.value}</strong>
-            </div>
-          ))}
-        </div>
-        <MiniProfitChart />
-      </div>
-    </div>
-  )
-}
-
-function ProductProof() {
-  const latestUpload = initialUploads[0]
-  const missingCost = initialMissingCosts[0]
-  const highProfitSku = topSkus[0]
+function ProfitSparkline() {
+  const max = Math.max(...profitSeries)
+  const min = Math.min(...profitSeries)
+  const range = Math.max(max - min, 1)
+  const points = profitSeries
+    .map((value, index) => {
+      const x = 14 + (index / (profitSeries.length - 1)) * 332
+      const y = 112 - ((value - min) / range) * 84
+      return `${x},${y}`
+    })
+    .join(' ')
 
   return (
-    <div className="product-proof-shell">
-      <div className="product-proof-topline">
-        <div>
-          <span>Product workflow</span>
-          <strong>Dashboard after a clean import</strong>
-        </div>
-        <StatusBadge tone="info">sample workspace</StatusBadge>
-      </div>
-
-      <div className="product-proof-grid">
-        <section className="proof-dashboard-pane">
-          <div className="proof-pane-heading">
-            <div>
-              <span>Total profit</span>
-              <strong>{kpis[2].value}</strong>
-            </div>
-            <StatusBadge tone="good">{kpis[2].delta}</StatusBadge>
-          </div>
-          <MiniProfitChart />
-          <div className="proof-sku-row">
-            <div>
-              <span>Top SKU</span>
-              <strong>{highProfitSku.sku}</strong>
-            </div>
-            <div>
-              <span>Margin</span>
-              <strong>{highProfitSku.margin}</strong>
-            </div>
-            <div>
-              <span>Profit</span>
-              <strong>{highProfitSku.profit}</strong>
-            </div>
-          </div>
-        </section>
-
-        <section className="proof-import-pane">
-          <div className="proof-pane-heading compact">
-            <FileArrowUp size={22} weight="duotone" />
-            <div>
-              <span>Latest import</span>
-              <strong>{latestUpload.file}</strong>
-            </div>
-          </div>
-          <div className="proof-import-meta">
-            <span>{latestUpload.source}</span>
-            <span>{latestUpload.rows} rows</span>
-            <StatusBadge tone="warn">mapping</StatusBadge>
-          </div>
-          <div className="mapping-preview-list">
-            {initialMappingRows.slice(0, 4).map((row) => (
-              <div className="mapping-preview-row" key={row.source}>
-                <span>{row.source || 'Empty field'}</span>
-                <strong>{row.target}</strong>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="proof-action-pane">
-          <WarningCircle size={24} weight="duotone" />
-          <div>
-            <span>Next fix</span>
-            <strong>{missingCost.sku}</strong>
-            <p>{missingCost.orders} orders need unit cost before net profit is trusted.</p>
-          </div>
-          <Link to="/costs">
-            Resolve costs
-            <ArrowRight size={15} weight="bold" />
-          </Link>
-        </section>
-      </div>
-    </div>
-  )
-}
-
-function MiniProfitChart() {
-  const points = useMemo(() => {
-    const max = Math.max(...profitSeries)
-    const min = Math.min(...profitSeries)
-    const range = Math.max(max - min, 1)
-
-    return profitSeries
-      .map((value, index) => {
-        const x = 10 + (index / (profitSeries.length - 1)) * 340
-        const y = 102 - ((value - min) / range) * 78
-        return `${x},${y}`
-      })
-      .join(' ')
-  }, [])
-
-  return (
-    <svg className="mini-profit-chart" viewBox="0 0 360 120" role="img" aria-label="Profit trend moving upward">
-      <polyline className="mini-grid" points="10,96 350,96" />
-      <polyline className="mini-grid" points="10,62 350,62" />
-      <polyline className="mini-grid" points="10,28 350,28" />
-      <polyline className="mini-line" points={points} />
+    <svg className="landing-sparkline" viewBox="0 0 360 136" role="img" aria-label="Profit trend moving upward">
+      <polyline className="landing-spark-grid" points="14,108 346,108" />
+      <polyline className="landing-spark-grid" points="14,70 346,70" />
+      <polyline className="landing-spark-grid" points="14,32 346,32" />
+      <polyline className="landing-spark-line" points={points} />
       {points.split(' ').map((point, index) => {
         const [cx, cy] = point.split(',')
-        return <circle className="mini-dot" cx={cx} cy={cy} r={index === profitSeries.length - 1 ? 4.2 : 2.4} key={point} />
+        return <circle className="landing-spark-dot" cx={cx} cy={cy} r={index === profitSeries.length - 1 ? 4.4 : 2.5} key={point} />
       })}
     </svg>
   )

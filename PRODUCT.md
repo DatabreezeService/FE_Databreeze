@@ -6,7 +6,15 @@ product
 
 ## Users
 
-DataBreeze is designed first for Vietnamese e-commerce sellers who manage one to three shops, then for multi-shop sellers, SMEs, and small teams. These users work inside recurring operational routines: exporting marketplace files, checking revenue, adding missing costs, reviewing warnings, and deciding what to fix next.
+DataBreeze is designed first for Vietnamese e-commerce sellers who manage one to three shops, then for multi-shop sellers, SMEs, and small teams.
+
+These users work inside recurring operational routines:
+
+- Export marketplace files.
+- Check revenue.
+- Add missing costs.
+- Review warnings.
+- Decide what to fix next.
 
 They are usually not data engineers. They need a product that turns messy CSV and Excel files into trusted profit views without asking them to understand ETL, SQL, schemas, or backend jobs.
 
@@ -22,54 +30,45 @@ Success means a seller can answer practical business questions quickly:
 - Which uploaded files imported cleanly, partially, or failed?
 - What action should happen next?
 
-The frontend should hide avoidable technical complexity while preserving enough visibility for trust, especially around uploads, mapping, validation, and data quality.
+## Core Workflow
 
-## Brand Personality
+```text
+Upload files
+  -> map columns
+  -> validate rows
+  -> import clean data
+  -> review profit
+  -> fix missing costs or data issues
+```
 
-Calm, operational, trustworthy.
+## Product Objects
 
-DataBreeze should feel like a clear workspace for business decisions, not a marketing site, analytics toy, or generic AI dashboard. The voice should be direct, seller-friendly, and Vietnamese-first. It should feel helpful without being childish, and precise without sounding like enterprise software.
+- User: a person who logs in.
+- Workspace: the business context and tenant boundary.
+- Store: a shop or sales account inside a workspace.
+- Upload: a file submitted by the user.
+- Import job: the processing run for an upload.
+- Mapping: a confirmed relationship between source columns and DataBreeze fields.
+- Dashboard: the business view produced from imported and calculated data.
 
-## Anti-references
+## Priority
 
-Avoid these directions:
+The SMB Profit Dashboard is the first core product loop.
 
-- A marketing landing page as the first product screen.
-- Decorative SaaS gradients, generic purple-blue glow, or glass-heavy UI.
-- Dense enterprise dashboards before the user has enough data.
-- Fake AI chat as the core interaction.
-- Hiding mapping and validation details so deeply that users cannot trust the import.
-- Technical ETL language as primary UI copy.
-- Overbuilt team/admin settings before upload, mapping, dashboard, costs, and expenses work.
-- Repeated equal card grids where lists, tables, steps, or focused panels would be clearer.
+Build order:
 
-## Design Principles
+1. Upload and parse files.
+2. Map columns.
+3. Validate rows.
+4. Import durable records.
+5. Show trusted dashboard metrics.
+6. Surface missing costs and data problems.
+7. Support expenses and reconciliation.
+8. Add more sources after the first loop works.
 
-1. Start from the user's next decision.
-   Every screen should make the next useful action obvious: upload, map, fix costs, review warnings, or inspect profit.
+## Non-Goals
 
-2. Trust comes from visibility.
-   Uploads, mappings, validation errors, skipped rows, and dashboard freshness should be visible and explainable.
-
-3. Vietnamese first, technical second.
-   Use seller-friendly Vietnamese labels first. Technical names can appear as secondary helper text when needed.
-
-4. Solo-simple, team-ready.
-   The product should feel easy for a solo seller while keeping room for workspaces, stores, roles, billing, and auditability later.
-
-5. Restraint earns confidence.
-   Use familiar app patterns, compact navigation, calm surfaces, clear states, and limited accent color. Save visual emphasis for action, risk, and status.
-
-## Accessibility & Inclusion
-
-Target WCAG AA for the product UI. Body text, controls, placeholders, focus states, charts, status badges, and table text must remain readable in light and dark preferences.
-
-Required considerations:
-
-- Keyboard reachable navigation and forms.
-- Visible focus states on all controls.
-- Reduced motion support for transitions.
-- No color-only status communication.
-- Touch targets that work on mobile.
-- Responsive table alternatives for small screens.
-- Vietnamese text length support without clipped labels or overflowing buttons.
+- Do not become a generic BI platform before the seller profit loop works.
+- Do not build every marketplace source at once.
+- Do not let AI-generated advice outrank reliable import, validation, and calculation.
+- Do not require users to understand database schemas.
